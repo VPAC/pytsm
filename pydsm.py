@@ -7,15 +7,15 @@ import sys
 import os
 import string
 
-debug = True
+debug = False
 
 
-def runcommand(user,password,*arguments):
+def runcommand(user,password,logfile,*arguments):
   """
   Accept 3 or more strings, the first two being username and password, the others being arguments to pass to dsmadmc.
   """
   output = []
-  cmd = [ "/usr/bin/dsmadmc", "-id=%s"%user, "-password=%s"%password, "-comma",  string.join(arguments) ]
+  cmd = [ "/usr/bin/dsmadmc", "-id=%s"%user, "-password=%s"%password, "-ERRORLOGNAME=%s"%logfile, "-comma",  string.join(arguments) ]
   process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
   state="prefix"
@@ -56,8 +56,10 @@ def runcommand(user,password,*arguments):
 
 
 if __name__=="__main__":
+  configfile=os.path.join(os.getenv('HOME'),'pydsm','pydsm.conf')
+  logfile=os.path.join(os.getenv('HOME'),'pydsm','dsmerror.log')
   config = ConfigParser.RawConfigParser()
-  config.read('/root/pydsm/pydsm.conf')
+  config.read(configfile)
 
   user = config.get('main', 'user')
   password = config.get('main', 'password')
@@ -65,7 +67,7 @@ if __name__=="__main__":
   if len(sys.argv) <= 1:
     raise RuntimeError("Not enough parameters")
   else:
-    lines = runcommand(user,password,string.join(sys.argv[1::]))
+    lines = runcommand(user,password,logfile,string.join(sys.argv[1::]))
     for i in lines:
       sys.stdout.write(i)
     sys.exit(0)
