@@ -12,7 +12,9 @@ debug = False
 
 def runcommand(user,password,logfile,*arguments):
   """
-  Accept 3 or more strings, the first two being username and password, the others being arguments to pass to dsmadmc.
+Accept 4 or more strings, the first two being username and password, the third
+being a writeable file that dsmadmc can log errors to, and the others being
+arguments to pass to dsmadmc.
   """
   output = []
   cmd = [ "/usr/bin/dsmadmc", "-id=%s"%user, "-password=%s"%password, "-ERRORLOGNAME=%s"%logfile, "-comma",  string.join(arguments) ]
