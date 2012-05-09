@@ -53,8 +53,8 @@ arguments to pass to dsmadmc.
   retcode = process.wait()
   if retcode:
       sys.stderr.write("Command '%s' returned non-zero exit status %d\n" % (" ".join(cmd), retcode))
-      sys.exit(retcode)
-  return output
+#      sys.exit(retcode)
+  return output,retcode
 
 
 if __name__=="__main__":
@@ -69,8 +69,8 @@ if __name__=="__main__":
   if len(sys.argv) <= 1:
     raise RuntimeError("Not enough parameters")
   else:
-    lines = runcommand(user,password,logfile,string.join(sys.argv[1::]))
-    for i in lines:
+    dsmresponse = runcommand(user,password,logfile,string.join(sys.argv[1::]))
+    for i in dsmresponse[0]:
       sys.stdout.write(i)
-    sys.exit(0)
+    sys.exit(dsmresponse[1])
 
