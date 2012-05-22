@@ -52,7 +52,9 @@ arguments to pass to dsmadmc.
 
   retcode = process.wait()
   if retcode:
-      sys.stderr.write("Command '%s' returned non-zero exit status %d\n" % (" ".join(cmd), retcode))
+      cmd_str=" ".join(cmd)
+      cleancommand=cmd_str.split(password,1)[0] + 'XXXXXXXXXX' + cmd_str.split(password,1)[1] #don't put the password on stderr
+      sys.stderr.write("Command '%s' returned non-zero exit status %d\n" % (cleancommand, retcode))
 #      sys.exit(retcode)
   return output,retcode
 
