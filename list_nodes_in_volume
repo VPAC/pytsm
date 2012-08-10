@@ -40,12 +40,13 @@ elif args.stgpool is not None:
         { "name": "Filespace", },
     ]
     for row in results:
-        volume = row[0]
-        sys.stdout.write("\n\n\n%s\n\n"%volume)
-        results = d.run_command(
-        "select distinct node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
-        pydsm.output_results(results, headers, args.format)
-
-
+        if isinstance(row, pydsm.Message):
+            sys.stderr.write("Message: %s\n"%row)
+        else:
+            volume = row[0]
+            sys.stdout.write("\n\n\n%s\n\n"%volume)
+            results = d.run_command(
+            "select distinct node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
+            pydsm.output_results(results, headers, args.format)
 
 d.close()
