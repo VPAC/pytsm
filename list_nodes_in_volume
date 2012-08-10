@@ -25,7 +25,7 @@ d.auto_open(args.server)
 
 if args.volume is not None:
     results = d.run_command(
-    "select distinct node_name, filespace_name, stgpool_name from volumeusage where volume_name='%s'"%args.volume)
+    "select node_name, filespace_name, stgpool_name from volumeusage where volume_name='%s'"%args.volume)
     headers = [
         { "name": "Node", },
         { "name": "Filespace", },
@@ -46,7 +46,7 @@ elif args.stgpool is not None:
             volume = row[0]
             sys.stdout.write("\n\n\n%s\n\n"%volume)
             results = d.run_command(
-            "select distinct node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
+            "select node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
             pydsm.output_results(results, headers, args.format)
 
 d.close()
