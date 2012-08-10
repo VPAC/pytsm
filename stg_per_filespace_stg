@@ -28,3 +28,5 @@ headers = [
     { "name": "Used (MiB)", "justify": "right", },
 ]
 pydsm.output_results(results, headers, args.format)
+
+d.close()

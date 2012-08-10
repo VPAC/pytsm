@@ -54,3 +54,5 @@ headers = [
     { "name": "Volatility", "justify": "right", },
 ]
 pydsm.output_results(results, headers, args.format)
+
+d.close()
