@@ -1,0 +1,56 @@
+#!/usr/bin/python
+import sys
+import pydsm
+import argparse
+
+parser = argparse.ArgumentParser(description='Display TSM backup history')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv"], default="readable",
+                   help='format to use when displaying results')
+
+args = parser.parse_args()
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+results = d.run_command(
+"""select
+    entity as "Node",
+    activity as "Activity",
+    date(start_time) as "Start Date",
+    time(start_time) as "Start Time",
+    date(end_time) as "End Date",
+    time(end_time) as "End Time",
+    cast(TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as decimal(6,1)) as "Min",
+    cast(bytes/1024/1024 as decimal(10,2)) as "Total_MiB",
+    case
+        when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
+        then cast(bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024/1024 as decimal(6,1))
+        else cast(0 as decimal(6,1))
+        end as "MiB/Sec",
+    case
+        when examined >0
+        then cast(affected/examined*100 as decimal(6,1))
+        else cast(0 as decimal(6,1))
+        end as "Volatility_%"
+from summary
+where
+    activity='BACKUP'
+order by 2,3""")
+
+headers = [
+    { "name": "Node", },
+    { "name": "Activity", },
+    { "name": "Start Date", },
+    { "name": "Start Time", },
+    { "name": "End Date", },
+    { "name": "End Time", },
+    { "name": "Minutes", "justify": "right", },
+    { "name": "Used (MiB)", "justify": "right", },
+    { "name": "MiB/Sec", "justify": "right", },
+    { "name": "Volatility", "justify": "right", },
+]
+pydsm.output_results(results, headers, args.format)

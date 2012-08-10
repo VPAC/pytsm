@@ -1,0 +1,30 @@
+#!/usr/bin/python
+import sys
+import pydsm
+import argparse
+
+parser = argparse.ArgumentParser(description='List TSM storage pools used for node')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv"], default="readable",
+                   help='format to use when displaying results')
+parser.add_argument('--node', dest="node", required=True,
+                   help='Name of node')
+
+args = parser.parse_args()
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+results = d.run_command(
+"SELECT node_name, filespace_name, stgpool_name, SUM(logical_mb) AS \"Total MB\" FROM occupancy WHERE node_name='%s' GROUP BY node_name, filespace_name, stgpool_name ORDER BY filespace_name"%args.node.upper())
+
+headers = [
+    { "name": "Node", },
+    { "name": "Filespace", },
+    { "name": "STG Pool", },
+    { "name": "Used (MiB)", "justify": "right", },
+]
+pydsm.output_results(results, headers, args.format)

@@ -1,0 +1,51 @@
+#!/usr/bin/python
+import sys
+import pydsm
+import argparse
+
+parser = argparse.ArgumentParser(description='List abbreviated contents of TSM volume')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv"], default="readable",
+                   help='format to use when displaying results')
+
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--stgpool', dest="stgpool",
+                   help='Storage pool to list')
+group.add_argument('--volume', dest="volume",
+                   help='Name of volume')
+
+args = parser.parse_args()
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+
+if args.volume is not None:
+    results = d.run_command(
+    "select distinct node_name, filespace_name, stgpool_name from volumeusage where volume_name='%s'"%args.volume)
+    headers = [
+        { "name": "Node", },
+        { "name": "Filespace", },
+        { "name": "STG Pool", },
+    ]
+    pydsm.output_results(results, headers, args.format)
+elif args.stgpool is not None:
+    results = d.run_command(
+    "select volume_name from volumes where stgpool_name='%s'"%args.stgpool)
+    headers = [
+        { "name": "Node", },
+        { "name": "Filespace", },
+    ]
+    for row in results:
+        volume = row[0]
+        sys.stdout.write("\n\n\n%s\n\n"%volume)
+        results = d.run_command(
+        "select distinct node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
+        pydsm.output_results(results, headers, args.format)
+
+
+
+d.close()
