@@ -1,0 +1,176 @@
+#!/usr/bin/python
+import datetime
+import pydsm
+import argparse
+import sys
+
+today = datetime.datetime.now().date()
+
+yesterday = today - datetime.timedelta(1)
+
+start = datetime.datetime.combine(yesterday, datetime.time(16,30))
+stop = datetime.datetime.combine(today, datetime.time(16,30))
+
+errors_events=False
+errors_actlog=False
+
+def header(name):
+    l = len(name)
+    sys.stdout.write("\n\n%s\n* %s *\n%s\n"%("*"*(l+4),name.upper(),"*"*(l+4)))
+
+# parse arguments
+
+parser = argparse.ArgumentParser(description='Display TSM backup history')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv"], default="readable",
+                   help='format to use when displaying results')
+
+args = parser.parse_args()
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+# ---------------  EVENTS -------------------
+
+header("events")
+
+results = d.run_command(
+"""select
+    date(SCHEDULED_START),
+    time(SCHEDULED_START),
+    time(ACTUAL_START),
+    time(COMPLETED),
+    DOMAIN_NAME,
+    SCHEDULE_NAME,
+    NODE_NAME,
+    STATUS,
+    RESULT
+from events
+where SCHEDULED_START >= '%s' and SCHEDULED_START < '%s'
+order by SCHEDULED_START
+"""%(start,stop))
+
+headers = [
+    { "name": "Date", },
+    { "name": "Scheduled", },
+    { "name": "Start", },
+    { "name": "Completed", },
+    { "name": "Domain", },
+    { "name": "Schedule", },
+    { "name": "Node", },
+    { "name": "Status" },
+    { "name": "Result" },
+]
+
+
+def check_events(results):
+    global errors_events
+    for r in results:
+        if not isinstance(r, pydsm.Message):
+            if r[7] != "Completed":
+                errors_events = True
+        yield r
+
+try:
+    pydsm.output_results(check_events(results), headers, args.format)
+except pydsm.Failed:
+    pass
+
+# ---------------  SUMMARY -------------------
+
+for activity in [ 'BACKUP', 'RESTORE', 'MIGRATION', 'STGPOOL BACKUP', 'FULL_DBBACKUP', 'RECLAMATION' ]:
+    header("summary %s"%activity)
+
+    results = d.run_command(
+    """select
+        entity as "Node",
+        activity as "Activity",
+        date(start_time) as "Start Date",
+        time(start_time) as "Start Time",
+        date(end_time) as "End Date",
+        time(end_time) as "End Time",
+        cast(TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as decimal(6,1)) as "Min",
+        cast(bytes/1024/1024 as decimal(10,2)) as "Total_MiB",
+        case
+            when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
+            then cast(bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024/1024 as decimal(6,1))
+            else cast(0 as decimal(6,1))
+            end as "MiB/Sec",
+        case
+            when examined >0
+            then cast(affected/examined*100 as decimal(6,1))
+            else cast(0 as decimal(6,1))
+            end as "Volatility_%%"
+    from summary
+    where START_TIME >= '%s' and START_TIME < '%s' and activity='%s'
+    order by START_TIME
+    """%(start, stop, activity))
+
+    headers = [
+        { "name": "Node", },
+        { "name": "Activity", },
+        { "name": "Start Date", },
+        { "name": "Start Time", },
+        { "name": "End Date", },
+        { "name": "End Time", },
+        { "name": "Minutes", "justify": "right", },
+        { "name": "Used (MiB)", "justify": "right", },
+        { "name": "MiB/Sec", "justify": "right", },
+        { "name": "Volatility", "justify": "right", },
+    ]
+
+
+    try:
+        pydsm.output_results(results, headers, args.format)
+    except pydsm.Failed:
+        pass
+
+
+# ---------------  ACTLOG -------------------
+
+header("actlog")
+
+results = d.run_command(
+"""select
+    date(DATE_TIME),
+    time(DATE_TIME),
+    MESSAGE
+from actlog
+where DATE_TIME >= '%s' and DATE_TIME < '%s' and ( SEVERITY='E' or SEVERITY='S' ) and (MSGNO!=2034 and MSGNO!=1701 and MSGNO!=944)
+order by DATE_TIME
+"""%(start,stop))
+
+headers = [
+    { "name": "Date", },
+    { "name": "Time", },
+    { "name": "Message", },
+]
+
+
+def check_actlog(results):
+    global errors_actlog
+    for r in results:
+        errors_actlog=True
+        yield r
+
+try:
+    pydsm.output_results(check_actlog(results), headers, args.format)
+except pydsm.Failed:
+    pass
+
+# ---------------  ERRORS -------------------
+header("errors")
+
+if errors_events:
+    sys.stdout.write("Errors in events")
+    sys.stdout.write("\n")
+
+if errors_actlog:
+    sys.stdout.write("Errors in activity log")
+    sys.stdout.write("\n")
+
+
+d.close()
