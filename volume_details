@@ -24,29 +24,41 @@ d.auto_open(args.server)
 
 
 if args.volume is not None:
-    results = d.run_command(
-    "select node_name, filespace_name, stgpool_name from volumeusage where volume_name='%s'"%args.volume)
-    headers = [
-        { "name": "Node", },
-        { "name": "Filespace", },
-        { "name": "STG Pool", },
-    ]
-    pydsm.output_results(results, headers, args.format)
+    condition = "where volume_name='%s'"%args.volume
 elif args.stgpool is not None:
-    results = d.run_command(
-    "select volume_name from volumes where stgpool_name='%s'"%args.stgpool)
-    headers = [
-        { "name": "Node", },
-        { "name": "Filespace", },
-    ]
-    for row in results:
-        if isinstance(row, pydsm.Message):
-            sys.stderr.write("Message: %s\n"%row)
-        else:
-            volume = row[0]
-            sys.stdout.write("\n\n\n%s\n\n"%volume)
-            results = d.run_command(
-            "select node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
-            pydsm.output_results(results, headers, args.format)
+    condition = "where stgpool_name='%s'"%args.stgpool
+else:
+    condition = ""
+
+results = d.run_command(
+"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,cast(EST_CAPACITY_MB*PCT_UTILIZED/100 as decimal(10,2)),STATUS from volumes %s order by STATUS"%condition)
+result_array = []
+for row in results:
+    result_array.append(row)
+
+headers = [
+    { "name": "Volume", },
+    { "name": "STG Pool", },
+    { "name": "Capacity (MiB)", "justify": "right" },
+    { "name": "Utilized (%)", "justify": "right" },
+    { "name": "Utilized (MiB)", "justify": "right" },
+    { "name": "Status", },
+]
+pydsm.output_results(result_array, headers, args.format)
+
+headers = [
+    { "name": "Volume", },
+    { "name": "Node", },
+    { "name": "Filespace", },
+]
+for row in result_array:
+    if isinstance(row, pydsm.Message):
+        sys.stderr.write("Message: %s\n"%row)
+    else:
+        sys.stdout.write("\n")
+        volume = row[0]
+        results = d.run_command(
+        "select volume_name, node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
+        pydsm.output_results(results, headers, args.format)
 
 d.close()

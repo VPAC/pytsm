@@ -58,11 +58,10 @@ class dsmadmc(object):
         reader = csv.reader(process.stdout,delimiter=",")
         for row in reader:
             iserror=False
-            if len(row) == 1:
-                m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
-                if m is not None:
-                    iserror=True
-                    yield Message(m.group(1), m.group(2), m.group(3), m.group(4))
+            m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
+            if m is not None:
+                iserror=True
+                yield Message(m.group(1), m.group(2), m.group(3), m.group(4) + ",".join(row[1:]))
             if not iserror:
                 yield row
 
