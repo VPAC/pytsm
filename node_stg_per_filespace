@@ -9,17 +9,27 @@ parser.add_argument('--server', dest="server",
 parser.add_argument('--format', dest="format",
                    choices=["readable", "csv"], default="readable",
                    help='format to use when displaying results')
-parser.add_argument('--node', dest="node", required=True,
+
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('--node', dest="node",
                    help='Name of node')
+group.add_argument('--stgpool', dest="stgpool",
+                   help='Storage pool to list')
 
 args = parser.parse_args()
 
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
+if args.node is not None:
+    condition = "where node_name='%s'"%args.node.upper()
+elif args.stgpool is not None:
+    condition = "where stgpool_name='%s'"%args.stgpool
+else:
+    condition = ""
 
 results = d.run_command(
-"SELECT node_name, filespace_name, stgpool_name, logical_mb AS \"Total MB\" FROM occupancy WHERE node_name='%s' ORDER BY node_name, filespace_name, stgpool_name"%args.node.upper())
+"SELECT node_name, filespace_name, stgpool_name, logical_mb AS \"Total MB\" FROM occupancy %s ORDER BY node_name, filespace_name, stgpool_name"%condition)
 
 headers = [
     { "name": "Node", },
