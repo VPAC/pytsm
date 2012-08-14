@@ -8,8 +8,8 @@ today = datetime.datetime.now().date()
 
 yesterday = today - datetime.timedelta(1)
 
-start = datetime.datetime.combine(yesterday, datetime.time(16,30))
-stop = datetime.datetime.combine(today, datetime.time(16,30))
+start = datetime.datetime.combine(yesterday, datetime.time(8,30))
+stop = datetime.datetime.combine(today, datetime.time(8,30))
 
 errors_events=False
 errors_actlog=False
@@ -104,17 +104,17 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
         time(start_time) as "Start Time",
         date(end_time) as "End Date",
         time(end_time) as "End Time",
-        cast(TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as decimal(6,1)) as "Min",
-        cast(bytes/1024/1024 as decimal(10,2)) as "Total_MiB",
+        TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as "Min",
+        bytes/1024/1024 as "Total_MiB",
         case
             when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
-            then cast(bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024/1024 as decimal(6,1))
-            else cast(0 as decimal(6,1))
+            then bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024/1024
+            else 0
             end as "MiB/Sec",
         case
             when examined >0
-            then cast(affected/examined*100 as decimal(6,1))
-            else cast(0 as decimal(6,1))
+            then affected/examined*100
+            else 0
             end as "Volatility_%%"
     from summary
     where START_TIME >= '%s' and START_TIME < '%s' and activity='%s'
@@ -128,10 +128,10 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
         { "name": "Start Time", },
         { "name": "End Date", },
         { "name": "End Time", },
-        { "name": "Minutes", "justify": "right", },
-        { "name": "Used (MiB)", "justify": "right", },
-        { "name": "MiB/Sec", "justify": "right", },
-        { "name": "Volatility", "justify": "right", },
+        { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f" },
     ]
 
 
@@ -177,6 +177,21 @@ try:
     pydsm.output_results(check_actlog(results), headers, args.format)
 except pydsm.Failed:
     pass
+
+# USAGE
+
+header("usage")
+
+results = d.run_command(
+"SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
+
+headers = [
+    { "name": "Node", },
+    { "name": "Logical (MiB)",  "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+]
+pydsm.output_results(results, headers, args.format)
 
 # ---------------  ERRORS -------------------
 header("errors")

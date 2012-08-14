@@ -8,6 +8,7 @@ import os
 import string
 import re
 import csv
+import locale
 
 
 class Message(object):
@@ -81,33 +82,72 @@ def output_results_csv(results, headers):
             writer.writerow(i)
 
 def output_results_readable(results, headers):
-    data = [ [h['name'] for h in headers] ]
+    locale.setlocale(locale.LC_ALL, '')
+
+    # retrieve data
+    data = []
     for i in results:
         if isinstance(i, Message):
             sys.stderr.write("Message: %s\n"%i)
         else:
             data.append(i)
 
-    col_width = []
+    # ensure header for every column
     for row_array in data:
+        while len(row_array) > len(headers):
+            headers.append({ "name": "untitled", "justify": "left" })
+
+    # caculate width's of headers
+    col_width = [ len(h["name"]) for h in headers ]
+
+    # for every row in data
+    for row_array in data:
+        # ensure header for every column
+        while len(row_array) > len(headers):
+            headers.append({ "name": "untitled", "justify": "left" })
+
+        # for every column
         for col in range(0,len(row_array)):
+            # format as required
+            f = "string"
+            if "format" in headers[col]:
+                f = headers[col]['format']
+            if f == "string":
+                pass
+            elif f == "integer":
+                row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
+            elif f == "float":
+                row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
+            else:
+                raise RuntimeError("Unknown format %s"%f)
+
+            # calculate max col width
             if col >= len(col_width):
                 col_width.append(0)
-            elif col_width[col] is None:
-                col_width[col] = 0
             col_width[col] = max(len(row_array[col]), col_width[col])
 
+    # output table headers
+    sep = ""
     for col in range(0,len(headers)):
-       sys.stdout.write(headers[col]['name'].ljust(col_width[col]+2))
+        sys.stdout.write(sep)
+        sep = "  "
+        sys.stdout.write(headers[col]['name'].ljust(col_width[col]))
     sys.stdout.write("\n")
+    sep = ""
     for col in range(0,len(headers)):
-       sys.stdout.write("-"*col_width[col])
-       sys.stdout.write("  ")
+        sys.stdout.write(sep)
+        sep = "  "
+        sys.stdout.write("-"*col_width[col])
     sys.stdout.write("\n")
-    for row_array in data[1:]:
+
+    # output table body
+    for row_array in data:
+        sep = ""
         for col in range(0,len(row_array)):
+            sys.stdout.write(sep)
+            sep = "  "
             justify = "left"
-            if col < len(headers) and 'justify' in headers[col]:
+            if 'justify' in headers[col]:
                 justify = headers[col]['justify']
             if justify == "left":
                 sys.stdout.write(row_array[col].ljust(col_width[col]))
@@ -115,7 +155,6 @@ def output_results_readable(results, headers):
                 sys.stdout.write(row_array[col].rjust(col_width[col]))
             else:
                 raise RuntimeError("Unknown justification %s"%justify)
-            sys.stdout.write("  ")
         sys.stdout.write("\n")
 
 def output_results(results, headers, output_format):

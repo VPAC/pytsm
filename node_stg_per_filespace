@@ -35,7 +35,7 @@ headers = [
     { "name": "Node", },
     { "name": "Filespace", },
     { "name": "STG Pool", },
-    { "name": "Used (MiB)", "justify": "right", },
+    { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.2f" },
 ]
 pydsm.output_results(results, headers, args.format)
 

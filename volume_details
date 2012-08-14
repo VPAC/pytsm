@@ -31,7 +31,7 @@ else:
     condition = ""
 
 results = d.run_command(
-"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,cast(EST_CAPACITY_MB*PCT_UTILIZED/100 as decimal(10,2)),STATUS from volumes %s order by STATUS"%condition)
+"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s order by STATUS"%condition)
 result_array = []
 for row in results:
     result_array.append(row)
@@ -39,9 +39,9 @@ for row in results:
 headers = [
     { "name": "Volume", },
     { "name": "STG Pool", },
-    { "name": "Capacity (MiB)", "justify": "right" },
-    { "name": "Utilized (%)", "justify": "right" },
-    { "name": "Utilized (MiB)", "justify": "right" },
+    { "name": "Capacity (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
+    { "name": "Utilized (%)",   "justify": "right", "format": "float", "spec": "%0.1f"  },
+    { "name": "Utilized (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
     { "name": "Status", },
 ]
 pydsm.output_results(result_array, headers, args.format)

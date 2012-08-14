@@ -48,10 +48,10 @@ headers = [
     { "name": "Start Time", },
     { "name": "End Date", },
     { "name": "End Time", },
-    { "name": "Minutes", "justify": "right", },
-    { "name": "Used (MiB)", "justify": "right", },
-    { "name": "MiB/Sec", "justify": "right", },
-    { "name": "Volatility", "justify": "right", },
+    { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f"  },
 ]
 pydsm.output_results(results, headers, args.format)
 
