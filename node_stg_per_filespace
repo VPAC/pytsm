@@ -19,7 +19,7 @@ d.auto_open(args.server)
 
 
 results = d.run_command(
-"SELECT node_name, filespace_name, stgpool_name, SUM(logical_mb) AS \"Total MB\" FROM occupancy WHERE node_name='%s' GROUP BY node_name, filespace_name, stgpool_name ORDER BY filespace_name"%args.node.upper())
+"SELECT node_name, filespace_name, stgpool_name, logical_mb AS \"Total MB\" FROM occupancy WHERE node_name='%s' ORDER BY node_name, filespace_name, stgpool_name"%args.node.upper())
 
 headers = [
     { "name": "Node", },
