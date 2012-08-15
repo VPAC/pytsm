@@ -46,11 +46,14 @@ class dsmadmc(object):
         password = config.get(server, 'password')
         self.open(server, user, password, logfile)
 
-    def run_command(self, command):
+    def execute(self, command, args=None):
         server = self.server
         user = self.user
         password = self.password
         logfile = self.logfile
+
+        if args is not None:
+            command = command % self.literal(args)
 
         output = []
         cmd = [ "/usr/bin/dsmadmc", "-servername=%s"%server, "-id=%s"%user, "-password=%s"%password, "-ERRORLOGNAME=%s"%logfile, "-comma",  "-dataonly=yes", command ]
@@ -71,6 +74,15 @@ class dsmadmc(object):
                 cmd[3] = "-password=XXXXXXXXXX" #don't put the password on stderr
                 cmd_str=" ".join(cmd)
                 raise Failed("Command '%s' returned non-zero exit status %d\n" % (cmd_str, retcode))
+
+    def literal(self, o):
+        result_array = []
+        for v in o:
+            v = str(v)
+            v = v.replace("'", "\\'")
+            result_array.append("'" + v + "'")
+        return tuple(result_array)
+
 
 def output_results_csv(results, headers):
     writer = csv.writer(sys.stdout, delimiter=',')
@@ -172,7 +184,7 @@ if __name__=="__main__":
     d = dsmadmc()
     d.auto_open(sys.argv[1])
 
-    results = d.run_command(string.join(sys.argv[2::]))
+    results = d.execute(string.join(sys.argv[2::]))
     output_results(results, [], "readable")
     d.close()
 

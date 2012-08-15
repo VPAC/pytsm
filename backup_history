@@ -16,7 +16,7 @@ d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
 
-results = d.run_command(
+results = d.execute(
 """select
     entity as "Node",
     activity as "Activity",

@@ -24,14 +24,17 @@ d.auto_open(args.server)
 
 
 if args.volume is not None:
-    condition = "where volume_name='%s'"%args.volume
+    condition = "where volume_name=%s"
+    cargs = (args.volume,)
 elif args.stgpool is not None:
-    condition = "where stgpool_name='%s'"%args.stgpool
+    condition = "where stgpool_name=%s"
+    cargs = (args.stgpool,)
 else:
     condition = ""
+    cargs = None
 
-results = d.run_command(
-"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s order by STATUS"%condition)
+results = d.execute(
+"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s order by STATUS"%condition, cargs)
 result_array = []
 for row in results:
     result_array.append(row)
@@ -57,8 +60,8 @@ for row in result_array:
     else:
         sys.stdout.write("\n")
         volume = row[0]
-        results = d.run_command(
-        "select volume_name, node_name, filespace_name from volumeusage where volume_name='%s'"%volume)
+        results = d.execute(
+        "select volume_name, node_name, filespace_name from volumeusage where volume_name=%s", (volume,))
         pydsm.output_results(results, headers, args.format)
 
 d.close()

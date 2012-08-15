@@ -17,7 +17,7 @@ d.auto_open(args.server)
 
 
 volumes = {}
-results = d.run_command(
+results = d.execute(
 "select VOLUME_NAME,LIBRARY_NAME,STATUS,LAST_USE from LIBVOLUMES")
 for r in results:
     if not isinstance(r, pydsm.Message):
@@ -29,7 +29,7 @@ for r in results:
 d.close()
 
 
-results = d.run_command(
+results = d.execute(
 "select VOLUME_NAME,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes order by VOLUME_NAME")
 inlib_array = []
 notinlib_array = []

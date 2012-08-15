@@ -39,7 +39,7 @@ sys.stdout.write("TSM summary from %s to %s\n\n"%(start,stop))
 
 header("events")
 
-results = d.run_command(
+results = d.execute(
 """select
     date(SCHEDULED_START),
     time(SCHEDULED_START),
@@ -51,9 +51,9 @@ results = d.run_command(
     STATUS,
     RESULT
 from events
-where SCHEDULED_START >= '%s' and SCHEDULED_START < '%s'
+where SCHEDULED_START >= %s and SCHEDULED_START < %s
 order by SCHEDULED_START
-"""%(start,stop))
+""", (start, stop))
 
 headers = [
     { "name": "Date", },
@@ -96,7 +96,7 @@ except pydsm.Failed:
 for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 'FULL_DBBACKUP', 'MIGRATION', 'RECLAMATION', 'MOVE DATA' ]:
     header("summary %s"%activity)
 
-    results = d.run_command(
+    results = d.execute(
     """select
         entity as "Node",
         activity as "Activity",
@@ -117,9 +117,9 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
             else 0
             end as "Volatility_%%"
     from summary
-    where START_TIME >= '%s' and START_TIME < '%s' and activity='%s'
+    where START_TIME >= %s and START_TIME < %s and activity=%s
     order by START_TIME
-    """%(start, stop, activity))
+    """, (start, stop, activity))
 
     headers = [
         { "name": "Node", },
@@ -145,16 +145,16 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
 
 header("actlog")
 
-results = d.run_command(
+results = d.execute(
 """select
     date(DATE_TIME),
     time(DATE_TIME),
     NODENAME,
     MESSAGE
 from actlog
-where DATE_TIME >= '%s' and DATE_TIME < '%s' and ( SEVERITY='E' or SEVERITY='S' ) and (MSGNO!=2034 and MSGNO!=1701 and MSGNO!=944)
+where DATE_TIME >= %s and DATE_TIME < %s and ( SEVERITY='E' or SEVERITY='S' ) and (MSGNO!=2034 and MSGNO!=1701 and MSGNO!=944)
 order by DATE_TIME
-"""%(start,stop))
+""", (start, stop))
 
 headers = [
     { "name": "Date", },
@@ -182,7 +182,7 @@ except pydsm.Failed:
 
 header("usage")
 
-results = d.run_command(
+results = d.execute(
 "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
 
 headers = [
