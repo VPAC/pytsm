@@ -102,7 +102,7 @@ def output_results_readable(results, headers):
         if isinstance(i, Message):
             sys.stderr.write("Message: %s\n"%i)
         else:
-            data.append(i)
+            data.append(list(i))
 
     # ensure header for every column
     for row_array in data:
