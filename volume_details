@@ -33,11 +33,21 @@ else:
     condition = ""
     cargs = None
 
+volumes = {}
 results = d.execute(
-"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s order by STATUS"%condition, cargs)
+"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s"%condition, cargs)
 result_array = []
 for row in results:
-    result_array.append(row)
+    if not isinstance(row, pydsm.Message):
+        v = row[0]
+        if v in volumes:
+            raise runtimeerror("volume %s found multiple times"%v)
+        volumes[v] = row
+    else:
+        sys.stderr.write("Message: %s\n"%row)
+
+results = d.execute(
+"select volume_name, node_name, filespace_name from volumeusage %s order by node_name, filespace_name"%condition, cargs)
 
 headers = [
     { "name": "Volume", },
@@ -46,22 +56,17 @@ headers = [
     { "name": "Utilized (%)",   "justify": "right", "format": "float", "spec": "%0.1f"  },
     { "name": "Utilized (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
     { "name": "Status", },
-]
-pydsm.output_results(result_array, headers, args.format)
-
-headers = [
-    { "name": "Volume", },
     { "name": "Node", },
     { "name": "Filespace", },
 ]
-for row in result_array:
-    if isinstance(row, pydsm.Message):
-        sys.stderr.write("Message: %s\n"%row)
-    else:
-        sys.stdout.write("\n")
-        volume = row[0]
-        results = d.execute(
-        "select volume_name, node_name, filespace_name from volumeusage where volume_name=%s", (volume,))
-        pydsm.output_results(results, headers, args.format)
+
+def process_results(results):
+    for row in results:
+        if not isinstance(row, pydsm.Message):
+            volume = row[0]
+            row = row[0:1] + volumes[volume][1:] + row[1:]
+        yield row
+
+pydsm.output_results(process_results(results), headers, args.format)
 
 d.close()

@@ -25,6 +25,8 @@ for r in results:
         if v in volumes:
             raise runtimeerror("volume %s found multiple times"%v)
         volumes[v] = r
+    else:
+        sys.stderr.write("Message: %s\n"%r)
 
 d.close()
 
@@ -35,14 +37,17 @@ inlib_array = []
 notinlib_array = []
 known_volumes = {}
 for r in results:
-    v = r[0]
-    if v in known_volumes:
-        raise runtimeerror("volume %s found multiple times"%v)
-    known_volumes[v] = r
-    if v in volumes:
-        inlib_array.append(r + volumes[v][1:])
+    if not isinstance(r, pydsm.Message):
+        v = r[0]
+        if v in known_volumes:
+            raise runtimeerror("volume %s found multiple times"%v)
+        known_volumes[v] = r
+        if v in volumes:
+            inlib_array.append(r + volumes[v][1:])
+        else:
+            notinlib_array.append(r)
     else:
-        notinlib_array.append(r)
+        sys.stderr.write("Message: %s\n"%r)
 
 sys.stdout.write("\n\nNOT IN LIBRARY\n")
 
@@ -75,9 +80,12 @@ sys.stdout.write("\n\nIN LIBRARY NOT ASSIGNED\n")
 
 result_array = []
 for _,r in volumes.items():
-    v = r[0]
-    if v not in known_volumes:
-        result_array.append(r)
+    if not isinstance(r, pydsm.Message):
+        v = r[0]
+        if v not in known_volumes:
+            result_array.append(r)
+    else:
+        sys.stderr.write("Message: %s\n"%r)
 
 headers = [
     { "name": "Volume", },
