@@ -10,7 +10,7 @@ parser.add_argument('--format', dest="format",
                    choices=["readable", "csv"], default="readable",
                    help='format to use when displaying results')
 
-group = parser.add_mutually_exclusive_group(required=True)
+group = parser.add_mutually_exclusive_group()
 group.add_argument('--node', dest="node",
                    help='Name of node')
 group.add_argument('--stgpool', dest="stgpool",
