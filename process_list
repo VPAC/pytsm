@@ -1,0 +1,46 @@
+#!/usr/bin/python
+import sys
+import pydsm
+import argparse
+
+parser = argparse.ArgumentParser(description='Display TSM processes')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv"], default="readable",
+                   help='format to use when displaying results')
+
+args = parser.parse_args()
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+results = d.execute(
+"""select
+    process_num,
+    process,
+    date(start_time) as "Start Date",
+    time(start_time) as "Start Time",
+    TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time))/60.0 as "Min",
+    bytes_processed/1024/1024 as "Total_MiB",
+    case
+        when TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time)) >0
+        then bytes_processed/TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time))/1024.0/1024.0
+        else cast(0 as decimal(6,1))
+        end as "MiB/Sec"
+    from processes
+""")
+
+headers = [
+    { "name": "PID", },
+    { "name": "Process", },
+    { "name": "Start Date", },
+    { "name": "Start Time", },
+    { "name": "Minutes", "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "MiB",     "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "MiB/Sec", "justify": "right", "format": "float", "spec": "%0.1f" },
+]
+pydsm.output_results(results, headers, args.format)
+
+d.close()
