@@ -129,7 +129,7 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
         { "name": "End Date", },
         { "name": "End Time", },
         { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "MiB",        "justify": "right", "format": "float", "spec": "%0.1f" },
         { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
         { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f" },
     ]

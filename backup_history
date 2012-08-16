@@ -25,15 +25,15 @@ results = d.execute(
     date(end_time) as "End Date",
     time(end_time) as "End Time",
     cast(TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as decimal(6,1)) as "Min",
-    cast(bytes/1024/1024 as decimal(10,2)) as "Total_MiB",
+    bytes/1024.0/1024.0 as "Total_MiB",
     case
         when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
-        then cast(bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024/1024 as decimal(6,1))
+        then bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024.0/1024.0
         else cast(0 as decimal(6,1))
         end as "MiB/Sec",
     case
         when examined >0
-        then cast(affected/examined*100 as decimal(6,1))
+        then affected*100.0/examined
         else cast(0 as decimal(6,1))
         end as "Volatility_%"
 from summary
@@ -49,7 +49,7 @@ headers = [
     { "name": "End Date", },
     { "name": "End Time", },
     { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+    { "name": "MiB",        "justify": "right", "format": "float", "spec": "%0.1f" },
     { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
     { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f"  },
 ]
