@@ -24,7 +24,7 @@ results = d.execute(
     time(start_time) as "Start Time",
     date(end_time) as "End Date",
     time(end_time) as "End Time",
-    cast(TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as decimal(6,1)) as "Min",
+    TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as "Min",
     bytes/1024.0/1024.0 as "Total_MiB",
     case
         when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
