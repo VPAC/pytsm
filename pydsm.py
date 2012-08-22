@@ -11,20 +11,16 @@ import csv
 import locale
 
 
-class Message(object):
-    def __init__(self, msg_prefix, msg_number, msg_type, msg_text):
-        self.msg_prefix = msg_prefix
-        self.msg_number = msg_number
-        self.msg_type = msg_type
-        self.msg_text = msg_text
-
-    def __str__(self):
-        return "%s%s%s %s"%(self.msg_prefix, self.msg_number, self.msg_type, self.msg_text)
+def _default_message_handler(msg_prefix, msg_number, msg_type, msg_text):
+    sys.stderr.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
 
 class Failed(Exception):
     pass
 
 class dsmadmc(object):
+
+    def __init__(self):
+        self.message_handler = _default_message_handler
 
     def open(self, server, user, password, logfile):
         self.server = server
@@ -34,6 +30,12 @@ class dsmadmc(object):
 
     def close(self):
         pass
+
+    def set_message_handler(self, message_handler):
+        self.message_handler = message_handler
+
+    def _message(self, msg_prefix, msg_number, msg_type, msg_text):
+        self.message_handler(msg_prefix, msg_number, msg_type, msg_text)
 
     def auto_open(self, server):
         configfile = os.path.join(os.getenv('HOME'),'.pydsm','pydsm.conf')
@@ -61,12 +63,12 @@ class dsmadmc(object):
 
         reader = csv.reader(process.stdout,delimiter=",")
         for row in reader:
-            iserror=False
+            is_msg=False
             m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
             if m is not None:
-                iserror=True
-                yield Message(m.group(1), m.group(2), m.group(3), m.group(4) + ",".join(row[1:]))
-            if not iserror:
+                is_msg=True
+                self._message(m.group(1), m.group(2), m.group(3), m.group(4) + ",".join(row[1:]))
+            if not is_msg:
                 yield row
 
             retcode = process.wait()
@@ -88,10 +90,7 @@ def output_results_csv(results, headers):
     writer = csv.writer(sys.stdout, delimiter=',')
     writer.writerow([h['name'] for h in headers])
     for i in results:
-        if isinstance(i, Message):
-            sys.stderr.write("Message: %s\n"%i)
-        else:
-            writer.writerow(i)
+        writer.writerow(i)
 
 def output_results_readable(results, headers):
     locale.setlocale(locale.LC_ALL, '')
@@ -99,10 +98,7 @@ def output_results_readable(results, headers):
     # retrieve data
     data = []
     for i in results:
-        if isinstance(i, Message):
-            sys.stderr.write("Message: %s\n"%i)
-        else:
-            data.append(list(i))
+        data.append(list(i))
 
     # ensure header for every column
     for row_array in data:

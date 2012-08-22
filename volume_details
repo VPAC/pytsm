@@ -38,13 +38,10 @@ results = d.execute(
 "select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s"%condition, cargs)
 result_array = []
 for row in results:
-    if not isinstance(row, pydsm.Message):
-        v = row[0]
-        if v in volumes:
-            raise runtimeerror("volume %s found multiple times"%v)
-        volumes[v] = row
-    else:
-        sys.stderr.write("Message: %s\n"%row)
+    v = row[0]
+    if v in volumes:
+        raise runtimeerror("volume %s found multiple times"%v)
+    volumes[v] = row
 
 results = d.execute(
 "select volume_name, node_name, filespace_name from volumeusage %s order by node_name, filespace_name"%condition, cargs)
@@ -62,9 +59,8 @@ headers = [
 
 def process_results(results):
     for row in results:
-        if not isinstance(row, pydsm.Message):
-            volume = row[0]
-            row = row[0:1] + volumes[volume][1:] + row[1:]
+        volume = row[0]
+        row = row[0:1] + volumes[volume][1:] + row[1:]
         yield row
 
 pydsm.output_results(process_results(results), headers, args.format)
