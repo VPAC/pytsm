@@ -490,8 +490,20 @@ class Texttable:
         items = len(maxi)
         length = reduce(lambda x,y: x+y, maxi)
         if self._max_width and length + items * 3 + 1 > self._max_width:
-            maxi = [(self._max_width - items * 3 -1) / items \
-                for n in range(items)]
+            max_width = self._max_width - items * 3 -1
+            max_col_width = max_width / items
+            desired_maxi = list(maxi)
+            width = 0
+            for i,v in enumerate(maxi):
+                if maxi[i] > max_col_width:
+                    maxi[i] = max_col_width
+                width = width + maxi[i]
+            i = 0
+            while (max_width - width) > 0:
+                if maxi[i] < desired_maxi[i]:
+                    maxi[i] = maxi[i] + 1
+                    width = width + 1
+                i = (i + 1) % len(maxi)
         self._width = maxi
 
     def _check_align(self):
