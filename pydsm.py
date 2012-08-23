@@ -9,7 +9,7 @@ import string
 import re
 import csv
 import locale
-
+import texttable
 
 def _default_message_handler(msg_prefix, msg_number, msg_type, msg_text):
     sys.stderr.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
@@ -105,9 +105,6 @@ def output_results_readable(results, headers):
         while len(row_array) > len(headers):
             headers.append({ "name": "untitled", "justify": "left" })
 
-    # caculate width's of headers
-    col_width = [ len(h["name"]) for h in headers ]
-
     # for every row in data
     for row_array in data:
         # ensure header for every column
@@ -120,50 +117,46 @@ def output_results_readable(results, headers):
             f = "string"
             if "format" in headers[col]:
                 f = headers[col]['format']
-            if f == "string":
-                pass
-            elif f == "integer":
+            if f == "integer":
                 row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
             elif f == "float":
                 row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
-            else:
-                raise RuntimeError("Unknown format %s"%f)
 
-            # calculate max col width
-            if col >= len(col_width):
-                col_width.append(0)
-            col_width[col] = max(len(row_array[col]), col_width[col])
+    col_align = []
+    col_dtype = []
+    table = texttable.Texttable(max_width=130)
+    table.set_deco(texttable.Texttable.HEADER | texttable.Texttable.VLINES)
+    for h in headers:
+        justify = "left"
+        if 'justify' in h:
+            justify = h['justify']
+        if justify == "left":
+            col_align.append("l")
+        elif justify == "right":
+            col_align.append("r")
+        else:
+            raise RuntimeError("Unknown justification %s"%justify)
 
-    # output table headers
-    sep = ""
-    for col in range(0,len(headers)):
-        sys.stdout.write(sep)
-        sep = "  "
-        sys.stdout.write(headers[col]['name'].ljust(col_width[col]))
+        f = "auto"
+        if "format" in h:
+            f = h['format']
+        if f == "string":
+            col_dtype.append('t')
+        elif f == "integer":
+            col_dtype.append('t')
+        elif f == "float":
+            col_dtype.append('t')
+        elif f == "auto":
+            col_dtype.append('auto')
+        else:
+            raise RuntimeError("Unknown format %s"%f)
+
+    table.set_cols_align(col_align)
+    table.set_cols_dtype(col_dtype)
+    table.header([ h["name"] for h in headers ])
+    table.add_rows(data, header=False)
+    sys.stdout.write(table.draw())
     sys.stdout.write("\n")
-    sep = ""
-    for col in range(0,len(headers)):
-        sys.stdout.write(sep)
-        sep = "  "
-        sys.stdout.write("-"*col_width[col])
-    sys.stdout.write("\n")
-
-    # output table body
-    for row_array in data:
-        sep = ""
-        for col in range(0,len(row_array)):
-            sys.stdout.write(sep)
-            sep = "  "
-            justify = "left"
-            if 'justify' in headers[col]:
-                justify = headers[col]['justify']
-            if justify == "left":
-                sys.stdout.write(row_array[col].ljust(col_width[col]))
-            elif justify == "right":
-                sys.stdout.write(row_array[col].rjust(col_width[col]))
-            else:
-                raise RuntimeError("Unknown justification %s"%justify)
-        sys.stdout.write("\n")
 
 def output_results(results, headers, output_format):
     if output_format == "csv":

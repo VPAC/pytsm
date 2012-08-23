@@ -171,8 +171,6 @@ def check_actlog(results):
     global errors_actlog
     for r in results:
         errors_actlog=True
-        data = r[3]
-        r[3] = data[:100] + (data[100:] and '..')
         yield r
 
 try:
