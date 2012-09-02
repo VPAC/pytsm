@@ -71,11 +71,11 @@ class dsmadmc(object):
             if not is_msg:
                 yield row
 
-            retcode = process.wait()
-            if retcode:
-                cmd[3] = "-password=XXXXXXXXXX" #don't put the password on stderr
-                cmd_str=" ".join(cmd)
-                raise Failed("Command '%s' returned non-zero exit status %d\n" % (cmd_str, retcode))
+        retcode = process.wait()
+        if retcode:
+            cmd[3] = "-password=XXXXXXXXXX" #don't put the password on stderr
+            cmd_str=" ".join(cmd)
+            raise Failed("Command '%s' returned non-zero exit status %d\n" % (cmd_str, retcode))
 
     def literal(self, o):
         result_array = []
