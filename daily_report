@@ -3,6 +3,7 @@ import datetime
 import pydsm
 import argparse
 import sys
+import re
 
 today = datetime.datetime.now().date()
 
@@ -171,6 +172,9 @@ def check_actlog(results):
     global errors_actlog
     for r in results:
         errors_actlog=True
+        m = re.match("(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
+        if m is not None:
+            r[3] =  "%s '%s...%s': %s"%(m.group(1), m.group(2), m.group(3), m.group(4))
         yield r
 
 try:
