@@ -44,7 +44,7 @@ for row in results:
     volumes[v] = row
 
 results = d.execute(
-"select volume_name, node_name, filespace_name from volumeusage %s order by node_name, filespace_name"%condition, cargs)
+"select volume_name, node_name, filespace_name from volumeusage %s order by volume_name, node_name, filespace_name"%condition, cargs)
 
 headers = [
     { "name": "Volume", },
