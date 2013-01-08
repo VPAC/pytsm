@@ -22,7 +22,7 @@ results = d.execute(
 for r in results:
     v = r[0]
     if v in volumes:
-        raise runtimeerror("volume %s found multiple times"%v)
+        raise RuntimeError("volume %s found multiple times"%v)
     volumes[v] = r
 
 d.close()
@@ -36,7 +36,7 @@ known_volumes = {}
 for r in results:
     v = r[0]
     if v in known_volumes:
-        raise runtimeerror("volume %s found multiple times"%v)
+        raise RuntimeError("volume %s found multiple times"%v)
     known_volumes[v] = r
     if v in volumes:
         inlib_array.append(r + volumes[v][1:])

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import sys
 import pydsm
 import argparse
 
@@ -40,7 +39,7 @@ result_array = []
 for row in results:
     v = row[0]
     if v in volumes:
-        raise runtimeerror("volume %s found multiple times"%v)
+        raise RuntimeError("volume %s found multiple times"%v)
     volumes[v] = row
 
 results = d.execute(
