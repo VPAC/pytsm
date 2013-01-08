@@ -2,7 +2,6 @@
 import datetime
 import pydsm
 import argparse
-import sys
 import re
 
 today = datetime.datetime.now().date()
@@ -15,10 +14,6 @@ stop = datetime.datetime.combine(today, datetime.time(8,30))
 errors_events=False
 errors_actlog=False
 
-def header(name):
-    l = len(name)
-    sys.stdout.write("\n\n%s\n* %s *\n%s\n"%("*"*(l+4),name.upper(),"*"*(l+4)))
-
 # parse arguments
 
 parser = argparse.ArgumentParser(description='Display TSM backup history')
@@ -30,15 +25,21 @@ parser.add_argument('--format', dest="format",
 
 args = parser.parse_args()
 
+f = pydsm.get_formatter(args.format)
+
+def header(name):
+    l = len(name)
+    f.write("\n\n%s\n* %s *\n%s\n"%("*"*(l+4),name.upper(),"*"*(l+4)))
+
 def message_handler(msg_prefix, msg_number, msg_type, msg_text):
-    sys.stdout.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
+    f.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
 
 d = pydsm.dsmadmc()
 d.set_message_handler(message_handler)
 d.auto_open(args.server)
 
 
-sys.stdout.write("TSM summary from %s to %s\n\n"%(start,stop))
+f.write("TSM summary from %s to %s\n\n"%(start,stop))
 
 # ---------------  EVENTS -------------------
 
@@ -91,7 +92,7 @@ def check_events(results):
         yield r
 
 try:
-    pydsm.output_results(check_events(results), headers, args.format)
+    f.output_results(check_events(results), headers)
 except pydsm.Failed:
     pass
 
@@ -140,7 +141,7 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
 
 
     try:
-        pydsm.output_results(results, headers, args.format)
+        f.output_results(results, headers)
     except pydsm.Failed:
         pass
 
@@ -195,18 +196,18 @@ headers = [
     { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
     { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
 ]
-pydsm.output_results(results, headers, args.format)
+f.output_results(results, headers)
 
 # ---------------  ERRORS -------------------
 header("errors")
 
 if errors_events:
-    sys.stdout.write("Errors in events")
-    sys.stdout.write("\n")
+    f.write("Errors in events")
+    f.write("\n")
 
 if errors_actlog:
-    sys.stdout.write("Errors in activity log")
-    sys.stdout.write("\n")
+    f.write("Errors in activity log")
+    f.write("\n")
 
 
 d.close()

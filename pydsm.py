@@ -84,83 +84,92 @@ class dsmadmc(object):
         return tuple(result_array)
 
 
-def output_results_csv(results, headers):
-    writer = csv.writer(sys.stdout, delimiter=',')
-    writer.writerow([h['name'] for h in headers])
-    for i in results:
-        writer.writerow(i)
+class formatter(object):
+    def __init__(self, output=sys.stdout):
+        self.output = output
 
-def output_results_readable(results, headers):
-    locale.setlocale(locale.LC_ALL, '')
+    def write(self, line):
+        self.output.write(line)
 
-    # retrieve data
-    data = []
-    for i in results:
-        data.append(list(i))
+class formatter_csv(formatter):
+    def output_results(self, results, headers):
+        writer = csv.writer(self.output, delimiter=',')
+        writer.writerow([h['name'] for h in headers])
+        for i in results:
+            writer.writerow(i)
 
-    # ensure header for every column
-    for row_array in data:
-        while len(row_array) > len(headers):
-            headers.append({ "name": "untitled", "justify": "left" })
+class formatter_readable(formatter):
+    def output_results(self, results, headers):
+        locale.setlocale(locale.LC_ALL, '')
 
-    # for every row in data
-    for row_array in data:
+        # retrieve data
+        data = []
+        for i in results:
+            data.append(list(i))
+
         # ensure header for every column
-        while len(row_array) > len(headers):
-            headers.append({ "name": "untitled", "justify": "left" })
+        for row_array in data:
+            while len(row_array) > len(headers):
+                headers.append({ "name": "untitled", "justify": "left" })
 
-        # for every column
-        for col in range(0,len(row_array)):
-            # format as required
-            f = "string"
-            if "format" in headers[col]:
-                f = headers[col]['format']
-            if f == "integer":
-                row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
+        # for every row in data
+        for row_array in data:
+            # ensure header for every column
+            while len(row_array) > len(headers):
+                headers.append({ "name": "untitled", "justify": "left" })
+
+            # for every column
+            for col in range(0,len(row_array)):
+                # format as required
+                f = "string"
+                if "format" in headers[col]:
+                    f = headers[col]['format']
+                if f == "integer":
+                    row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
+                elif f == "float":
+                    row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
+
+        col_align = []
+        col_dtype = []
+        table = texttable.Texttable(max_width=130)
+        table.set_deco(texttable.Texttable.HEADER | texttable.Texttable.VLINES)
+        for h in headers:
+            justify = "left"
+            if 'justify' in h:
+                justify = h['justify']
+            if justify == "left":
+                col_align.append("l")
+            elif justify == "right":
+                col_align.append("r")
+            else:
+                raise RuntimeError("Unknown justification %s"%justify)
+
+            f = "auto"
+            if "format" in h:
+                f = h['format']
+            if f == "string":
+                col_dtype.append('t')
+            elif f == "integer":
+                col_dtype.append('t')
             elif f == "float":
-                row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
+                col_dtype.append('t')
+            elif f == "auto":
+                col_dtype.append('auto')
+            else:
+                raise RuntimeError("Unknown format %s"%f)
 
-    col_align = []
-    col_dtype = []
-    table = texttable.Texttable(max_width=130)
-    table.set_deco(texttable.Texttable.HEADER | texttable.Texttable.VLINES)
-    for h in headers:
-        justify = "left"
-        if 'justify' in h:
-            justify = h['justify']
-        if justify == "left":
-            col_align.append("l")
-        elif justify == "right":
-            col_align.append("r")
-        else:
-            raise RuntimeError("Unknown justification %s"%justify)
+        table.set_cols_align(col_align)
+        table.set_cols_dtype(col_dtype)
+        table.header([ h["name"] for h in headers ])
+        table.add_rows(data, header=False)
+        self.output.write(table.draw())
+        self.output.write("\n")
 
-        f = "auto"
-        if "format" in h:
-            f = h['format']
-        if f == "string":
-            col_dtype.append('t')
-        elif f == "integer":
-            col_dtype.append('t')
-        elif f == "float":
-            col_dtype.append('t')
-        elif f == "auto":
-            col_dtype.append('auto')
-        else:
-            raise RuntimeError("Unknown format %s"%f)
-
-    table.set_cols_align(col_align)
-    table.set_cols_dtype(col_dtype)
-    table.header([ h["name"] for h in headers ])
-    table.add_rows(data, header=False)
-    sys.stdout.write(table.draw())
-    sys.stdout.write("\n")
-
-def output_results(results, headers, output_format):
+def get_formatter(output_format, *args, **kwargs):
     if output_format == "csv":
-        output_results_csv(results, headers)
+        return formatter_csv(*args, **kwargs)
     elif output_format == "readable":
-        output_results_readable(results, headers)
+        return formatter_readable(*args, **kwargs)
     else:
         raise RuntimeError("Unknown format %s"%output_format)
 
@@ -171,7 +180,9 @@ if __name__=="__main__":
     d = dsmadmc()
     d.auto_open(sys.argv[1])
 
+    f = get_formatter(output_format="readable")
+
     results = d.execute(string.join(sys.argv[2::]))
-    output_results(results, [], "readable")
+    f.output_results(results, [])
     d.close()
 

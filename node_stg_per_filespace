@@ -17,6 +17,8 @@ group.add_argument('--stgpool', dest="stgpool",
 
 args = parser.parse_args()
 
+f = pydsm.get_formatter(args.format)
+
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
@@ -39,6 +41,6 @@ headers = [
     { "name": "STG Pool", },
     { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.2f" },
 ]
-pydsm.output_results(results, headers, args.format)
+f.output_results(results, headers)
 
 d.close()

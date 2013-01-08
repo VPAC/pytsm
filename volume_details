@@ -17,6 +17,8 @@ group.add_argument('--volume', dest="volume",
 
 args = parser.parse_args()
 
+f = pydsm.get_formatter(args.format)
+
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
@@ -62,6 +64,6 @@ def process_results(results):
         row = row[0:1] + volumes[volume][1:] + row[1:]
         yield row
 
-pydsm.output_results(process_results(results), headers, args.format)
+f.output_results(process_results(results), headers)
 
 d.close()

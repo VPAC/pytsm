@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import sys
 import pydsm
 import argparse
 
@@ -11,6 +10,8 @@ parser.add_argument('--format', dest="format",
                    help='format to use when displaying results')
 
 args = parser.parse_args()
+
+f = pydsm.get_formatter(args.format)
 
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
@@ -43,7 +44,7 @@ for r in results:
     else:
         notinlib_array.append(r)
 
-sys.stdout.write("\n\nNOT IN LIBRARY\n")
+f.write("\n\nNOT IN LIBRARY\n")
 
 headers = [
     { "name": "Volume", },
@@ -53,9 +54,9 @@ headers = [
     { "name": "Utilized (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
     { "name": "Status", },
 ]
-pydsm.output_results(notinlib_array, headers, args.format)
+f.output_results(notinlib_array, headers)
 
-sys.stdout.write("\n\nIN LIBRARY ASSIGNED\n")
+f.write("\n\nIN LIBRARY ASSIGNED\n")
 
 headers = [
     { "name": "Volume", },
@@ -68,9 +69,9 @@ headers = [
     { "name": "Status", },
     { "name": "Usage", },
 ]
-pydsm.output_results(inlib_array, headers, args.format)
+f.output_results(inlib_array, headers)
 
-sys.stdout.write("\n\nIN LIBRARY NOT ASSIGNED\n")
+f.write("\n\nIN LIBRARY NOT ASSIGNED\n")
 
 result_array = []
 for _,r in volumes.items():
@@ -84,4 +85,4 @@ headers = [
     { "name": "Status", },
     { "name": "Usage", },
 ]
-pydsm.output_results(result_array, headers, args.format)
+f.output_results(result_array, headers)

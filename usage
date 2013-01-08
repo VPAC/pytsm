@@ -13,6 +13,8 @@ parser.add_argument('--node', dest="node",
 
 args = parser.parse_args()
 
+f = pydsm.get_formatter(args.format)
+
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
@@ -38,6 +40,6 @@ headers = [
     { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
 ]
 
-pydsm.output_results(results, headers, args.format)
+f.output_results(results, headers)
 
 d.close()
