@@ -2,7 +2,6 @@
 
 import ConfigParser
 import subprocess
-import select
 import sys
 import os
 import string
@@ -57,7 +56,6 @@ class dsmadmc(object):
         if args is not None:
             command = command % self.literal(args)
 
-        output = []
         cmd = [ "/usr/bin/dsmadmc", "-servername=%s"%server, "-id=%s"%user, "-password=%s"%password, "-ERRORLOGNAME=%s"%logfile, "-comma",  "-dataonly=yes", command ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
