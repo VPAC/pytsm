@@ -3,6 +3,10 @@ import datetime
 import pydsm
 import argparse
 import re
+import StringIO
+import sys
+import subprocess
+import email.mime.text
 
 today = datetime.datetime.now().date()
 
@@ -22,10 +26,18 @@ parser.add_argument('--server', dest="server",
 parser.add_argument('--format', dest="format",
                    choices=["readable", "csv"], default="readable",
                    help='format to use when displaying results')
+parser.add_argument('--sender', dest="sender", required=True,
+                   help='Sender email address')
+parser.add_argument('--email', dest="email", required=True,
+                   help='Destination email address')
+parser.add_argument("--debug", help="write email to stdout instead of sending it",
+                    action="store_true")
+
 
 args = parser.parse_args()
 
-f = pydsm.get_formatter(args.format)
+s = StringIO.StringIO()
+f = pydsm.get_formatter(args.format, output=s)
 
 def header(name):
     l = len(name)
@@ -176,7 +188,7 @@ def check_actlog(results):
         m = re.match("(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
         if m is not None:
             r[3] =  "%s '%s...%s': %s"%(m.group(1), m.group(2), m.group(3), m.group(4))
-        print r[0], r[1], r[2], r[3]
+        f.write(u"%s, %s, %s, %s" % (r[0].decode("utf-8"), r[1].decode("utf-8"), r[2].decode("utf-8"), r[3].decode("utf-8")))
 
 try:
     check_actlog(results)
@@ -201,9 +213,12 @@ f.output_results(results, headers)
 # ---------------  ERRORS -------------------
 header("errors")
 
+needs_attention = False
+
 if errors_events:
     f.write("Errors in events")
     f.write("\n")
+    needs_attention = True
 
 if errors_actlog:
     f.write("Errors in activity log")
@@ -211,3 +226,21 @@ if errors_actlog:
 
 
 d.close()
+
+# ---------------  Send E-MAIL -------------------
+msg=email.mime.text.MIMEText(s.getvalue(), _charset="utf8")
+s.close()
+
+if needs_attention:
+    msg['Subject'] = "TSM Operational Report: Needs Attention"
+else:
+    msg['Subject'] = "TSM Operational Report"
+
+msg['From'] = args.sender
+msg['To'] = args.email
+
+if args.debug:
+    sys.stdout.write(str(msg))
+else:
+    p = subprocess.Popen(["/usr/sbin/sendmail", "-t"], stdin=subprocess.PIPE)
+    p.communicate(msg.as_string())
