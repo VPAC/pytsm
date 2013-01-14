@@ -228,19 +228,20 @@ if errors_actlog:
 d.close()
 
 # ---------------  Send E-MAIL -------------------
-msg=email.mime.text.MIMEText(s.getvalue(), _charset="utf8")
-s.close()
-
-if needs_attention:
-    msg['Subject'] = "TSM Operational Report: Needs Attention"
-else:
-    msg['Subject'] = "TSM Operational Report"
-
-msg['From'] = args.sender
-msg['To'] = args.email
-
 if args.debug:
-    sys.stdout.write(str(msg))
+    sys.stdout.write(s.getvalue())
+    s.close()
 else:
+    msg=email.mime.text.MIMEText(s.getvalue(), _charset="utf8")
+    s.close()
+
+    if needs_attention:
+        msg['Subject'] = "TSM Operational Report: Needs Attention"
+    else:
+        msg['Subject'] = "TSM Operational Report"
+
+    msg['From'] = args.sender
+    msg['To'] = args.email
+
     p = subprocess.Popen(["/usr/sbin/sendmail", "-t"], stdin=subprocess.PIPE)
     p.communicate(msg.as_string())
