@@ -201,20 +201,21 @@ try:
 except pydsm.Failed:
     pass
 
-# USAGE
+# ---------------  USAGE -------------------
 
-header("usage")
+if args.date is None:
+    header("usage")
 
-results = d.execute(
-"SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
+    results = d.execute(
+    "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
 
-headers = [
-    { "name": "Node", },
-    { "name": "Logical (MiB)",  "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
-]
-f.output_results(results, headers)
+    headers = [
+        { "name": "Node", },
+        { "name": "Logical (MiB)",  "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+        { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+    ]
+    f.output_results(results, headers)
 
 # ---------------  ERRORS -------------------
 header("errors")
