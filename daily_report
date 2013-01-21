@@ -26,6 +26,10 @@ parser.add_argument('--format', dest="format",
                    help='format to use when displaying results')
 parser.add_argument('--date', dest="date",
                    help='Date of report')
+parser.add_argument('--start', dest="start_time", required=True,
+                   help='Start time of report')
+parser.add_argument('--stop', dest="stop_time",
+                   help='Stop time of report')
 parser.add_argument('--sender', dest="sender", required=True,
                    help='Sender email address')
 parser.add_argument('--email', dest="email", required=True,
@@ -36,12 +40,21 @@ parser.add_argument("--debug", help="write email to stdout instead of sending it
 
 args = parser.parse_args()
 
+(hh,mm) = args.start_time.split(":")
+start_time = datetime.time(int(hh), int(mm))
+
+if args.stop_time is None:
+    stop_time = start_time
+else:
+    (hh,mm) = args.stop_time.split(":")
+    stop_time = datetime.time(int(hh), int(mm))
+
 if args.date is None:
-    start = datetime.datetime.combine(yesterday, datetime.time(8,30))
+    start = datetime.datetime.combine(yesterday, start_time)
 else:
     dt = datetime.datetime.strptime(args.date, "%Y-%m-%d").date()
-    start = datetime.datetime.combine(dt, datetime.time(8,30))
-stop = datetime.datetime.combine(start + datetime.timedelta(days=1), datetime.time(8,30))
+    start = datetime.datetime.combine(dt, start_time)
+stop = datetime.datetime.combine(start + datetime.timedelta(days=1), stop_time)
 
 s = StringIO.StringIO()
 f = pydsm.get_formatter(args.format, output=s)
