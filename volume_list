@@ -6,12 +6,13 @@ parser = argparse.ArgumentParser(description='List abbreviated contents of TSM v
 parser.add_argument('--server', dest="server",
                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv"], default="readable",
+                   choices=["readable", "csv", "html"], default="readable",
                    help='format to use when displaying results')
 
 args = parser.parse_args()
 
 f = pydsm.get_formatter(args.format)
+f.output_head("Volume List")
 
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
@@ -44,7 +45,7 @@ for r in results:
     else:
         notinlib_array.append(r)
 
-f.write("\n\nNOT IN LIBRARY\n")
+f.output_header("NOT IN LIBRARY")
 
 headers = [
     { "name": "Volume", },
@@ -56,7 +57,7 @@ headers = [
 ]
 f.output_results(notinlib_array, headers)
 
-f.write("\n\nIN LIBRARY ASSIGNED\n")
+f.output_header("IN LIBRARY ASSIGNED")
 
 headers = [
     { "name": "Volume", },
@@ -71,7 +72,7 @@ headers = [
 ]
 f.output_results(inlib_array, headers)
 
-f.write("\n\nIN LIBRARY NOT ASSIGNED\n")
+f.output_header("IN LIBRARY NOT ASSIGNED")
 
 result_array = []
 for _,r in volumes.items():
@@ -86,3 +87,5 @@ headers = [
     { "name": "Usage", },
 ]
 f.output_results(result_array, headers)
+
+f.output_tail()

@@ -9,6 +9,7 @@ import re
 import csv
 import locale
 import texttable
+import copy
 
 def _default_message_handler(msg_prefix, msg_number, msg_type, msg_text):
     sys.stderr.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
@@ -88,32 +89,36 @@ class formatter(object):
     def __init__(self, output=sys.stdout):
         self.output = output
 
-    def write(self, line):
+    def output_head(self, title):
+        self.output.write("# ")
+        self.output.write(title)
+        self.output.write("\n\n")
+
+    def output_tail(self):
+        pass
+
+    def output_header(self, line):
+        self.output.write("\n\n## ")
         self.output.write(line)
+        self.output.write("\n\n")
 
-class formatter_csv(formatter):
-    def output_results(self, results, headers):
-        writer = csv.writer(self.output, delimiter=',')
-        writer.writerow([h['name'] for h in headers])
-        for i in results:
-            writer.writerow(i)
+    def output_text(self, line):
+        self.output.write(line)
+        self.output.write("\n")
 
-class formatter_readable(formatter):
-    def output_results(self, results, headers):
-        locale.setlocale(locale.LC_ALL, '')
+    def format_results(self, results, headers):
 
-        # retrieve data
-        data = []
-        for i in results:
-            data.append(list(i))
+        # copy data
+        results = copy.deepcopy(results)
+        headers = copy.deepcopy(headers)
 
         # ensure header for every column
-        for row_array in data:
+        for row_array in results:
             while len(row_array) > len(headers):
                 headers.append({ "name": "untitled", "justify": "left" })
 
-        # for every row in data
-        for row_array in data:
+        # for every row in results
+        for row_array in results:
             # ensure header for every column
             while len(row_array) > len(headers):
                 headers.append({ "name": "untitled", "justify": "left" })
@@ -128,6 +133,81 @@ class formatter_readable(formatter):
                     row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
                 elif f == "float":
                     row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
+
+        return results, headers
+
+class formatter_csv(formatter):
+    def output_results(self, results, headers):
+        writer = csv.writer(self.output, delimiter=',')
+        writer.writerow([h['name'] for h in headers])
+        for row in results:
+            writer.writerow(row)
+
+class formatter_html(formatter):
+    def output_results(self, results, headers):
+        results, headers = self.format_results(results, headers)
+
+        self.output.write("<table>\n<tr>")
+        for h in headers:
+            justify = "left"
+            if 'justify' in h:
+                justify = h['justify']
+            if justify == "left":
+                pass
+            elif justify == "right":
+                pass
+            else:
+                raise RuntimeError("Unknown justification %s"%justify)
+            self.output.write("<th align='%s'>" % justify)
+            self.output.write(h['name'])
+            self.output.write("</th>")
+        self.output.write("</tr>\n")
+
+        for row in results:
+            self.output.write("<tr>")
+            for d, h in zip(row, headers):
+                justify = "left"
+                if 'justify' in h:
+                    justify = h['justify']
+                if justify == "left":
+                    pass
+                elif justify == "right":
+                    pass
+                else:
+                    raise RuntimeError("Unknown justification %s"%justify)
+                self.output.write("<td align='%s'>" % justify)
+                self.output.write(d)
+                self.output.write("</td>")
+            self.output.write("</tr>\n")
+        self.output.write("</table>\n")
+
+    def output_head(self, title):
+        self.output.write('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
+        self.output.write('<html><head><title>')
+        self.output.write(title)
+        self.output.write('</title></head><body><h1>')
+        self.output.write(title)
+        self.output.write('</h1>')
+        self.output.write("\n\n")
+
+    def output_tail(self):
+        self.output.write('</body>\n')
+
+    def output_header(self, line):
+        self.output.write("<h2>")
+        self.output.write(line)
+        self.output.write("</h2>\n")
+
+    def output_text(self, line):
+        self.output.write("<p>")
+        self.output.write(line)
+        self.output.write("</p>\n")
+
+class formatter_readable(formatter):
+    def output_results(self, results, headers):
+        locale.setlocale(locale.LC_ALL, '')
+
+        results, headers = self.format_results(results, headers)
 
         col_align = []
         col_dtype = []
@@ -161,13 +241,15 @@ class formatter_readable(formatter):
         table.set_cols_align(col_align)
         table.set_cols_dtype(col_dtype)
         table.header([ h["name"] for h in headers ])
-        table.add_rows(data, header=False)
+        table.add_rows(results, header=False)
         self.output.write(table.draw())
         self.output.write("\n")
 
 def get_formatter(output_format, *args, **kwargs):
     if output_format == "csv":
         return formatter_csv(*args, **kwargs)
+    elif output_format == "html":
+        return formatter_html(*args, **kwargs)
     elif output_format == "readable":
         return formatter_readable(*args, **kwargs)
     else:
@@ -183,6 +265,8 @@ if __name__=="__main__":
     f = get_formatter(output_format="readable")
 
     results = d.execute(string.join(sys.argv[2::]))
+    f.output_head(string.join(sys.argv[2::]))
     f.output_results(results, [])
     d.close()
+    f.output_tail()
 

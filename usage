@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description='Display TSM backup history')
 parser.add_argument('--server', dest="server",
                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv"], default="readable",
+                   choices=["readable", "csv", "html"], default="readable",
                    help='format to use when displaying results')
 parser.add_argument('--node', dest="node",
                    help='Name of node')
@@ -14,6 +14,7 @@ parser.add_argument('--node', dest="node",
 args = parser.parse_args()
 
 f = pydsm.get_formatter(args.format)
+f.output_head("Usage")
 
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
@@ -43,3 +44,5 @@ headers = [
 f.output_results(results, headers)
 
 d.close()
+
+f.output_tail()

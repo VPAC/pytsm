@@ -8,6 +8,7 @@ import StringIO
 import sys
 import subprocess
 import email.mime.text
+import email.mime.multipart
 
 today = datetime.datetime.now().date()
 
@@ -21,9 +22,6 @@ errors_actlog=False
 parser = argparse.ArgumentParser(description='Display TSM backup history')
 parser.add_argument('--server', dest="server",
                    help='TSM server to connect to')
-parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv"], default="readable",
-                   help='format to use when displaying results')
 parser.add_argument('--date', dest="date",
                    help='Date of report')
 parser.add_argument('--start', dest="start_time", required=True,
@@ -56,26 +54,53 @@ else:
     start = datetime.datetime.combine(dt, start_time)
 stop = datetime.datetime.combine(start + datetime.timedelta(days=1), stop_time)
 
-s = StringIO.StringIO()
-f = pydsm.get_formatter(args.format, output=s)
+class dual_writer(object):
+    def __init__(self):
+        self.plain_string = StringIO.StringIO()
+        self.plain = pydsm.get_formatter('readable', output=self.plain_string)
+        self.html_string = StringIO.StringIO()
+        self.html = pydsm.get_formatter('html', output=self.html_string)
 
-def header(name):
-    l = len(name)
-    f.write("\n\n%s\n* %s *\n%s\n"%("*"*(l+4),name.upper(),"*"*(l+4)))
+    def output_head(self, title):
+        self.plain.output_head(title)
+        self.html.output_head(title)
+
+    def output_tail(self):
+        self.plain.output_tail()
+        self.html.output_tail()
+
+    def output_header(self, line):
+        self.plain.output_header(line)
+        self.html.output_header(line)
+
+    def output_text(self, line):
+        self.plain.output_text(line)
+        self.html.output_text(line)
+
+    def output_results(self, results, headers):
+        results = list(results)
+        self.plain.output_results(results, headers)
+        self.html.output_results(results, headers)
+
+    def close(self):
+        self.plain_string.close()
+        self.html_string.close()
+
+f = dual_writer()
 
 def message_handler(msg_prefix, msg_number, msg_type, msg_text):
-    f.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
+    f.output_text("%s%s%s %s"%(msg_prefix, msg_number, msg_type, msg_text))
 
 d = pydsm.dsmadmc()
 d.set_message_handler(message_handler)
 d.auto_open(args.server)
 
 
-f.write("TSM summary from %s to %s\n\n"%(start,stop))
+f.output_head("TSM summary from %s to %s\n\n"%(start,stop))
 
 # ---------------  EVENTS -------------------
 
-header("events")
+f.output_header("events")
 
 results = d.execute(
 """select
@@ -131,7 +156,7 @@ except pydsm.Failed:
 # ---------------  SUMMARY -------------------
 
 for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 'FULL_DBBACKUP', 'MIGRATION', 'RECLAMATION', 'MOVE DATA' ]:
-    header("summary %s"%activity)
+    f.output_header("summary %s"%activity)
 
     results = d.execute(
     """select
@@ -180,7 +205,7 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
 
 # ---------------  ACTLOG -------------------
 
-header("actlog")
+f.output_header("actlog")
 
 results = d.execute(
 """select
@@ -219,7 +244,7 @@ def check_actlog(results):
         m = re.match("(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
         if m is not None:
             r[3] =  "%s '%s...%s': %s"%(m.group(1), m.group(2), m.group(3), m.group(4))
-        f.write(u"%s, %s, %s, %s" % (decode(r[0]), decode(r[1]), decode(r[2]), decode(r[3])))
+        f.output_text(u"%s, %s, %s, %s" % (decode(r[0]), decode(r[1]), decode(r[2]), decode(r[3])))
 
 try:
     check_actlog(results)
@@ -229,7 +254,7 @@ except pydsm.Failed:
 # ---------------  USAGE -------------------
 
 if args.date is None:
-    header("usage")
+    f.output_header("usage")
 
     results = d.execute(
     "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
@@ -243,29 +268,31 @@ if args.date is None:
     f.output_results(results, headers)
 
 # ---------------  ERRORS -------------------
-header("errors")
+f.output_header("errors")
 
 needs_attention = False
 
 if errors_events:
-    f.write("Errors in events")
-    f.write("\n")
+    f.output_text("Errors in events")
     needs_attention = True
 
 if errors_actlog:
-    f.write("Errors in activity log")
-    f.write("\n")
+    f.output_text("Errors in activity log")
 
 
 d.close()
+f.output_tail()
 
 # ---------------  Send E-MAIL -------------------
 if args.debug:
-    sys.stdout.write(s.getvalue())
-    s.close()
+    sys.stdout.write(f.plain_string.getvalue())
+    sys.stdout.write(f.html_string.getvalue())
+    f.close()
 else:
-    msg=email.mime.text.MIMEText(s.getvalue(), _charset="utf8")
-    s.close()
+    msg = email.mime.multipart.MIMEMultipart('alternative')
+    msg.attach(email.mime.text.MIMEText(f.plain_string.getvalue(), "plain", _charset="utf8"))
+    msg.attach(email.mime.text.MIMEText(f.html_string.getvalue(), "html", _charset="utf8"))
+    f.close()
 
     if needs_attention:
         msg['Subject'] = "TSM Operational Report: Needs Attention"
