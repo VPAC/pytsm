@@ -147,7 +147,7 @@ class formatter_html(formatter):
     def output_results(self, results, headers):
         results, headers = self.format_results(results, headers)
 
-        self.output.write("<table>\n<tr>")
+        self.output.write("<table border='1'>\n<tr>")
         for h in headers:
             justify = "left"
             if 'justify' in h:
