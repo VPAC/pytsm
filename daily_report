@@ -294,7 +294,7 @@ else:
     msg.attach(email.mime.text.MIMEText(f.html_string.getvalue(), "html", _charset="utf8"))
     f.close()
 
-    subject = "TSM Operational Report, TSM, Daily Report"
+    subject = "TSM Operational Report - TSM, Daily Report"
     if needs_attention:
         subject += " - Needs Attention"
     else:
