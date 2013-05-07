@@ -1,0 +1,35 @@
+#!/usr/bin/python
+import pydsm
+import argparse
+
+parser = argparse.ArgumentParser(description='Display TSM schedule')
+parser.add_argument('--server', dest="server",
+                   help='TSM server to connect to')
+parser.add_argument('--format', dest="format",
+                   choices=["readable", "csv", "html"], default="readable",
+                   help='format to use when displaying results')
+
+args = parser.parse_args()
+
+f = pydsm.get_formatter(args.format)
+f.output_head("Usage")
+
+d = pydsm.dsmadmc()
+d.auto_open(args.server)
+
+
+
+results = d.execute(
+"SELECT dayofweek, starttime, schedule_name FROM client_schedules ORDER BY dayofweek, starttime")
+
+headers = [
+    { "name": "Day", },
+    { "name": "Start Time",  },
+    { "name": "Node",  },
+]
+
+f.output_results(results, headers)
+
+d.close()
+
+f.output_tail()
