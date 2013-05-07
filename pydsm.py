@@ -109,7 +109,7 @@ class formatter(object):
     def format_results(self, results, headers):
 
         # copy data
-        results = copy.deepcopy(results)
+        results = copy.deepcopy(list(results))
         headers = copy.deepcopy(headers)
 
         # ensure header for every column
