@@ -22,9 +22,9 @@ Prerequisites:
     default_server: $DEFAULT_SERVER
 
 
-    [$DEFAULT_SERVER]
-    user: $USER
-    password: $PASSWORD
+    [$DEFAULT_SERVER]  
+    user: $USER  
+    password: $PASSWORD  
 
 
 You need to setup Tivoli's dsm.opt and dsm.sys files to point to your Tivoli 
