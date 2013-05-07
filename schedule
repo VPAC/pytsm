@@ -12,7 +12,7 @@ parser.add_argument('--format', dest="format",
 args = parser.parse_args()
 
 f = pydsm.get_formatter(args.format)
-f.output_head("Usage")
+f.output_head("Schedule")
 
 d = pydsm.dsmadmc()
 d.auto_open(args.server)
