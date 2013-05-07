@@ -256,16 +256,21 @@ def get_formatter(output_format, *args, **kwargs):
         raise RuntimeError("Unknown format %s"%output_format)
 
 if __name__=="__main__":
-    if len(sys.argv) <= 2:
-        raise RuntimeError("Not enough parameters")
+    if len(sys.argv) < 1:
+      raise RuntimeError("Usage: specify a tivoli command.")
+
+    configfile = os.path.join(os.getenv('HOME'),'.pydsm','pydsm.conf')
+    config = ConfigParser.RawConfigParser()
+    config.read(configfile)
+    server = config.get("main", 'default_server')
 
     d = dsmadmc()
-    d.auto_open(sys.argv[1])
+    d.auto_open(server)
 
     f = get_formatter(output_format="readable")
 
-    results = d.execute(string.join(sys.argv[2::]))
-    f.output_head(string.join(sys.argv[2::]))
+    results = d.execute(string.join(sys.argv[1::]))
+    f.output_head(string.join(sys.argv[1::]))
     f.output_results(results, [])
     d.close()
     f.output_tail()
