@@ -258,14 +258,8 @@ def get_formatter(output_format, *args, **kwargs):
 if __name__=="__main__":
     if len(sys.argv) < 1:
       raise RuntimeError("Usage: specify a tivoli command.")
-
-    configfile = os.path.join(os.getenv('HOME'),'.pydsm','pydsm.conf')
-    config = ConfigParser.RawConfigParser()
-    config.read(configfile)
-    server = config.get("main", 'default_server')
-
     d = dsmadmc()
-    d.auto_open(server)
+    d.auto_open(None)
 
     f = get_formatter(output_format="readable")
 
