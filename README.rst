@@ -1,7 +1,7 @@
-pydsm
+pytsm
 =====
 
-python dsm bridge
+python tsm bridge
 
 Authors
 -------

@@ -1,19 +1,19 @@
 # Copyright 2012-2014 VPAC
 #
-# This file is part of pydsm.
+# This file is part of pytsm.
 #
-# pydsm is free software: you can redistribute it and/or modify
+# pytsm is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# pydsm is distributed in the hope that it will be useful,
+# pytsm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with pydsm.  If not, see <http://www.gnu.org/licenses/>.
+# along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
@@ -60,8 +60,8 @@ class dsmadmc(object):
         self.message_handler(msg_prefix, msg_number, msg_type, msg_text)
 
     def auto_open(self, server):
-        configfile = os.path.join(os.getenv('HOME'), '.pydsm', 'pydsm.conf')
-        logfile = os.path.join(os.getenv('HOME'), '.pydsm', 'dsmerror.log')
+        configfile = os.path.join(os.getenv('HOME'), '.pytsm', 'pytsm.conf')
+        logfile = os.path.join(os.getenv('HOME'), '.pytsm', 'dsmerror.log')
         config = ConfigParser.RawConfigParser()
         config.read(configfile)
         if server is None:

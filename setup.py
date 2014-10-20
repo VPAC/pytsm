@@ -23,9 +23,9 @@ with open('VERSION.txt', 'r') as f:
     version = f.readline().strip()
 
 setup(
-    name="pydsm",
+    name="pytsm",
     version=version,
-    url='https://github.com/vpac/pydsm/',
+    url='https://github.com/vpac/pytsm/',
     author='Brian May',
     author_email='brian@v3.org.au',
     description='Small python library to monitor TSM',

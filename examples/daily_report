@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 # Copyright 2012-2014 VPAC
 #
-# This file is part of pydsm.
+# This file is part of pytsm.
 #
-# pydsm is free software: you can redistribute it and/or modify
+# pytsm is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# pydsm is distributed in the hope that it will be useful,
+# pytsm is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with pydsm.  If not, see <http://www.gnu.org/licenses/>.
+# along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import datetime
-import pydsm
+import pytsm
 import argparse
 import re
 import string
@@ -79,9 +79,9 @@ class dual_writer(object):
 
     def __init__(self):
         self.plain_string = StringIO.StringIO()
-        self.plain = pydsm.get_formatter('readable', output=self.plain_string)
+        self.plain = pytsm.get_formatter('readable', output=self.plain_string)
         self.html_string = StringIO.StringIO()
-        self.html = pydsm.get_formatter('html', output=self.html_string)
+        self.html = pytsm.get_formatter('html', output=self.html_string)
 
     def output_head(self, title):
         self.plain.output_head(title)
@@ -114,7 +114,7 @@ f = dual_writer()
 def message_handler(msg_prefix, msg_number, msg_type, msg_text):
     f.output_text("%s%s%s %s" % (msg_prefix, msg_number, msg_type, msg_text))
 
-d = pydsm.dsmadmc()
+d = pytsm.dsmadmc()
 d.set_message_handler(message_handler)
 d.auto_open(args.server)
 
@@ -173,7 +173,7 @@ def check_events(results):
 
 try:
     f.output_results(check_events(results), headers)
-except pydsm.Failed:
+except pytsm.Failed:
     pass
 
 # ---------------  SUMMARY -------------------
@@ -227,7 +227,7 @@ for activity in [
 
     try:
         f.output_results(results, headers)
-    except pydsm.Failed:
+    except pytsm.Failed:
         pass
 
 
@@ -281,7 +281,7 @@ def check_actlog(results):
 
 try:
     check_actlog(results)
-except pydsm.Failed:
+except pytsm.Failed:
     pass
 
 # ---------------  USAGE -------------------
