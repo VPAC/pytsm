@@ -11,11 +11,15 @@ import locale
 import texttable
 import copy
 
+
 def _default_message_handler(msg_prefix, msg_number, msg_type, msg_text):
-    sys.stderr.write("%s%s%s %s\n"%(msg_prefix, msg_number, msg_type, msg_text))
+    sys.stderr.write("%s%s%s %s\n" %
+                     (msg_prefix, msg_number, msg_type, msg_text))
+
 
 class Failed(Exception):
     pass
+
 
 class dsmadmc(object):
 
@@ -38,8 +42,8 @@ class dsmadmc(object):
         self.message_handler(msg_prefix, msg_number, msg_type, msg_text)
 
     def auto_open(self, server):
-        configfile = os.path.join(os.getenv('HOME'),'.pydsm','pydsm.conf')
-        logfile=os.path.join(os.getenv('HOME'),'.pydsm','dsmerror.log')
+        configfile = os.path.join(os.getenv('HOME'), '.pydsm', 'pydsm.conf')
+        logfile = os.path.join(os.getenv('HOME'), '.pydsm', 'dsmerror.log')
         config = ConfigParser.RawConfigParser()
         config.read(configfile)
         if server is None:
@@ -57,24 +61,34 @@ class dsmadmc(object):
         if args is not None:
             command = command % self.literal(args)
 
-        cmd = [ "/usr/bin/dsmadmc", "-servername=%s"%server, "-id=%s"%user, "-password=%s"%password, "-ERRORLOGNAME=%s"%logfile, "-comma",  "-dataonly=yes", command ]
+        cmd = [
+            "/usr/bin/dsmadmc",
+            "-servername=%s" % server,
+            "-id=%s" % user,
+            "-password=%s" % password,
+            "-ERRORLOGNAME=%s" % logfile,
+            "-comma",  "-dataonly=yes", command]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
-        reader = csv.reader(process.stdout,delimiter=",")
+        reader = csv.reader(process.stdout, delimiter=",")
         for row in reader:
-            is_msg=False
+            is_msg = False
             m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
             if m is not None:
-                is_msg=True
-                self._message(m.group(1), m.group(2), m.group(3), m.group(4) + ",".join(row[1:]))
+                is_msg = True
+                self._message(
+                    m.group(1), m.group(2), m.group(3),
+                    m.group(4) + ",".join(row[1:]))
             if not is_msg:
                 yield row
 
         retcode = process.wait()
         if retcode:
-            cmd[3] = "-password=XXXXXXXXXX" #don't put the password on stderr
-            cmd_str=" ".join(cmd)
-            raise Failed("Command '%s' returned non-zero exit status %d\n" % (cmd_str, retcode))
+            cmd[3] = "-password=XXXXXXXXXX"  # don't put the password on stderr
+            cmd_str = " ".join(cmd)
+            raise Failed(
+                "Command '%s' returned non-zero exit status %d\n"
+                % (cmd_str, retcode))
 
     def literal(self, o):
         result_array = []
@@ -86,6 +100,7 @@ class dsmadmc(object):
 
 
 class formatter(object):
+
     def __init__(self, output=sys.stdout):
         self.output = output
 
@@ -115,35 +130,43 @@ class formatter(object):
         # ensure header for every column
         for row_array in results:
             while len(row_array) > len(headers):
-                headers.append({ "name": "untitled", "justify": "left" })
+                headers.append({"name": "untitled", "justify": "left"})
 
         # for every row in results
         for row_array in results:
             # ensure header for every column
             while len(row_array) > len(headers):
-                headers.append({ "name": "untitled", "justify": "left" })
+                headers.append({"name": "untitled", "justify": "left"})
 
             # for every column
-            for col in range(0,len(row_array)):
+            for col in range(0, len(row_array)):
                 # format as required
                 f = "string"
                 if "format" in headers[col]:
                     f = headers[col]['format']
                 if f == "integer":
-                    row_array[col] = locale.format(headers[col]['spec'], int(row_array[col]), grouping=True)
+                    row_array[col] = locale.format(
+                        headers[col]['spec'],
+                        int(row_array[col]), grouping=True)
                 elif f == "float":
-                    row_array[col] = locale.format(headers[col]['spec'], float(row_array[col]), grouping=True)
+                    row_array[col] = locale.format(
+                        headers[col]['spec'],
+                        float(row_array[col]), grouping=True)
 
         return results, headers
 
+
 class formatter_csv(formatter):
+
     def output_results(self, results, headers):
         writer = csv.writer(self.output, delimiter=',')
         writer.writerow([h['name'] for h in headers])
         for row in results:
             writer.writerow(row)
 
+
 class formatter_html(formatter):
+
     def output_results(self, results, headers):
         results, headers = self.format_results(results, headers)
 
@@ -157,7 +180,7 @@ class formatter_html(formatter):
             elif justify == "right":
                 pass
             else:
-                raise RuntimeError("Unknown justification %s"%justify)
+                raise RuntimeError("Unknown justification %s" % justify)
             self.output.write("<th align='%s'>" % justify)
             self.output.write(h['name'])
             self.output.write("</th>")
@@ -174,7 +197,7 @@ class formatter_html(formatter):
                 elif justify == "right":
                     pass
                 else:
-                    raise RuntimeError("Unknown justification %s"%justify)
+                    raise RuntimeError("Unknown justification %s" % justify)
                 self.output.write("<td align='%s'>" % justify)
                 self.output.write(d)
                 self.output.write("</td>")
@@ -182,7 +205,9 @@ class formatter_html(formatter):
         self.output.write("</table>\n")
 
     def output_head(self, title):
-        self.output.write('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
+        self.output.write(
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" '
+            '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
         self.output.write('<html><head><title>')
         self.output.write(title)
         self.output.write('</title></head><body><h1>')
@@ -203,7 +228,9 @@ class formatter_html(formatter):
         self.output.write(line)
         self.output.write("</p>\n")
 
+
 class formatter_readable(formatter):
+
     def output_results(self, results, headers):
         locale.setlocale(locale.LC_ALL, '')
 
@@ -222,7 +249,7 @@ class formatter_readable(formatter):
             elif justify == "right":
                 col_align.append("r")
             else:
-                raise RuntimeError("Unknown justification %s"%justify)
+                raise RuntimeError("Unknown justification %s" % justify)
 
             f = "auto"
             if "format" in h:
@@ -236,14 +263,15 @@ class formatter_readable(formatter):
             elif f == "auto":
                 col_dtype.append('auto')
             else:
-                raise RuntimeError("Unknown format %s"%f)
+                raise RuntimeError("Unknown format %s" % f)
 
         table.set_cols_align(col_align)
         table.set_cols_dtype(col_dtype)
-        table.header([ h["name"] for h in headers ])
+        table.header([h["name"] for h in headers])
         table.add_rows(results, header=False)
         self.output.write(table.draw())
         self.output.write("\n")
+
 
 def get_formatter(output_format, *args, **kwargs):
     if output_format == "csv":
@@ -253,11 +281,12 @@ def get_formatter(output_format, *args, **kwargs):
     elif output_format == "readable":
         return formatter_readable(*args, **kwargs)
     else:
-        raise RuntimeError("Unknown format %s"%output_format)
+        raise RuntimeError("Unknown format %s" % output_format)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     if len(sys.argv) < 1:
       raise RuntimeError("Usage: specify a tivoli command.")
+
     d = dsmadmc()
     d.auto_open(None)
 
@@ -268,4 +297,3 @@ if __name__=="__main__":
     f.output_results(results, [])
     d.close()
     f.output_tail()
-

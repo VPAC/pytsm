@@ -4,12 +4,12 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Display TSM backup history')
 parser.add_argument('--server', dest="server",
-                   help='TSM server to connect to')
+                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv", "html"], default="readable",
-                   help='format to use when displaying results')
+                    choices=["readable", "csv", "html"], default="readable",
+                    help='format to use when displaying results')
 parser.add_argument('--node', dest="node",
-                   help='Name of node')
+                    help='Name of node')
 
 args = parser.parse_args()
 
@@ -32,13 +32,19 @@ else:
     condition = ""
 
 results = d.execute(
-"SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy "+condition+" GROUP BY node_name", cargs)
+    "SELECT node_name, sum(logical_mb), sum(physical_mb), "
+    "sum(physical_mb)-sum(logical_mb) "
+    "FROM occupancy " + condition + " "
+    "GROUP BY node_name", cargs)
 
 headers = [
-    { "name": "Node", },
-    { "name": "Logical (MiB)",  "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+    {"name": "Node", },
+    {"name": "Logical (MiB)",  "justify": "right",
+     "format": "float", "spec": "%0.1f"},
+    {"name": "Physical (MiB)", "justify": "right",
+     "format": "float", "spec": "%0.1f"},
+    {"name": "Overhead (MiB)", "justify": "right",
+     "format": "float", "spec": "%0.1f"},
 ]
 
 f.output_results(results, headers)

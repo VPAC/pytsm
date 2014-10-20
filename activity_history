@@ -4,15 +4,15 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Display TSM backup history')
 parser.add_argument('--server', dest="server",
-                   help='TSM server to connect to')
+                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv", "html"], default="readable",
-                   help='format to use when displaying results')
+                    choices=["readable", "csv", "html"], default="readable",
+                    help='format to use when displaying results')
 parser.add_argument('--node', dest="node",
-                   help='Name of node')
+                    help='Name of node')
 parser.add_argument('--activity', dest="activity",
-                   choices=["backup", "restore", "expiration"],
-                   help='Activity')
+                    choices=["backup", "restore", "expiration"],
+                    help='Activity')
 
 args = parser.parse_args()
 
@@ -38,7 +38,7 @@ else:
     condition = ""
 
 results = d.execute(
-"""select
+    """select
     entity as "Node",
     activity as "Activity",
     date(start_time) as "Start Date",
@@ -60,16 +60,20 @@ results = d.execute(
 from summary """ + condition + " order by 2,3", cargs)
 
 headers = [
-    { "name": "Node", },
-    { "name": "Activity", },
-    { "name": "Start Date", },
-    { "name": "Start Time", },
-    { "name": "End Date", },
-    { "name": "End Time", },
-    { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "MiB",        "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
-    { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f"  },
+    {"name": "Node", },
+    {"name": "Activity", },
+    {"name": "Start Date", },
+    {"name": "Start Time", },
+    {"name": "End Date", },
+    {"name": "End Time", },
+    {"name": "Minutes",    "justify": "right",
+        "format": "float", "spec": "%0.1f"},
+    {"name": "MiB",        "justify": "right",
+        "format": "float", "spec": "%0.1f"},
+    {"name": "MiB/Sec",    "justify": "right",
+        "format": "float", "spec": "%0.1f"},
+    {"name": "Volatility", "justify": "right",
+        "format": "float", "spec": "%0.1f"},
 ]
 f.output_results(results, headers)
 

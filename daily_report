@@ -14,37 +14,38 @@ today = datetime.datetime.now().date()
 
 yesterday = today - datetime.timedelta(1)
 
-errors_events=False
-errors_actlog=False
+errors_events = False
+errors_actlog = False
 
 # parse arguments
 
 parser = argparse.ArgumentParser(description='Display TSM backup history')
 parser.add_argument('--server', dest="server",
-                   help='TSM server to connect to')
+                    help='TSM server to connect to')
 parser.add_argument('--date', dest="date",
-                   help='Date of report')
+                    help='Date of report')
 parser.add_argument('--start', dest="start_time", required=True,
-                   help='Start time of report')
+                    help='Start time of report')
 parser.add_argument('--stop', dest="stop_time",
-                   help='Stop time of report')
+                    help='Stop time of report')
 parser.add_argument('--sender', dest="sender", required=True,
-                   help='Sender email address')
+                    help='Sender email address')
 parser.add_argument('--email', dest="email", required=True,
-                   help='Destination email address')
-parser.add_argument("--debug", help="write email to stdout instead of sending it",
+                    help='Destination email address')
+parser.add_argument("--debug",
+                    help="write email to stdout instead of sending it",
                     action="store_true")
 
 
 args = parser.parse_args()
 
-(hh,mm) = args.start_time.split(":")
+(hh, mm) = args.start_time.split(":")
 start_time = datetime.time(int(hh), int(mm))
 
 if args.stop_time is None:
     stop_time = start_time
 else:
-    (hh,mm) = args.stop_time.split(":")
+    (hh, mm) = args.stop_time.split(":")
     stop_time = datetime.time(int(hh), int(mm))
 
 if args.date is None:
@@ -54,7 +55,9 @@ else:
     start = datetime.datetime.combine(dt, start_time)
 stop = datetime.datetime.combine(start + datetime.timedelta(days=1), stop_time)
 
+
 class dual_writer(object):
+
     def __init__(self):
         self.plain_string = StringIO.StringIO()
         self.plain = pydsm.get_formatter('readable', output=self.plain_string)
@@ -88,22 +91,23 @@ class dual_writer(object):
 
 f = dual_writer()
 
+
 def message_handler(msg_prefix, msg_number, msg_type, msg_text):
-    f.output_text("%s%s%s %s"%(msg_prefix, msg_number, msg_type, msg_text))
+    f.output_text("%s%s%s %s" % (msg_prefix, msg_number, msg_type, msg_text))
 
 d = pydsm.dsmadmc()
 d.set_message_handler(message_handler)
 d.auto_open(args.server)
 
 
-f.output_head("TSM summary from %s to %s\n\n"%(start,stop))
+f.output_head("TSM summary from %s to %s\n\n" % (start, stop))
 
 # ---------------  EVENTS -------------------
 
 f.output_header("events")
 
 results = d.execute(
-"""select
+    """select
     date(SCHEDULED_START),
     time(SCHEDULED_START),
     time(ACTUAL_START),
@@ -119,15 +123,15 @@ order by SCHEDULED_START
 """, (start, stop))
 
 headers = [
-    { "name": "Date", },
-    { "name": "Scheduled", },
-    { "name": "Start", },
-    { "name": "Completed", },
-    { "name": "Domain", },
-    { "name": "Schedule", },
-    { "name": "Node", },
-    { "name": "Status" },
-    { "name": "Result" },
+    {"name": "Date", },
+    {"name": "Scheduled", },
+    {"name": "Start", },
+    {"name": "Completed", },
+    {"name": "Domain", },
+    {"name": "Schedule", },
+    {"name": "Node", },
+    {"name": "Status"},
+    {"name": "Result"},
 ]
 
 
@@ -145,7 +149,7 @@ def check_events(results):
         elif r[8] == "12":
             r[8] = "Errors"
         else:
-            r[8] = "Failed (%s)"%r[8]
+            r[8] = "Failed (%s)" % r[8]
         yield r
 
 try:
@@ -155,11 +159,11 @@ except pydsm.Failed:
 
 # ---------------  SUMMARY -------------------
 
-for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 'FULL_DBBACKUP', 'MIGRATION', 'RECLAMATION', 'MOVE DATA' ]:
-    f.output_header("summary %s"%activity)
+for activity in ['BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 'FULL_DBBACKUP', 'MIGRATION', 'RECLAMATION', 'MOVE DATA']:
+    f.output_header("summary %s" % activity)
 
     results = d.execute(
-    """select
+        """select
         entity as "Node",
         activity as "Activity",
         date(start_time) as "Start Date",
@@ -184,18 +188,21 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
     """, (start, stop, activity))
 
     headers = [
-        { "name": "Node", },
-        { "name": "Activity", },
-        { "name": "Start Date", },
-        { "name": "Start Time", },
-        { "name": "End Date", },
-        { "name": "End Time", },
-        { "name": "Minutes",    "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "MiB",        "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "MiB/Sec",    "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "Volatility", "justify": "right", "format": "float", "spec": "%0.1f" },
+        {"name": "Node", },
+        {"name": "Activity", },
+        {"name": "Start Date", },
+        {"name": "Start Time", },
+        {"name": "End Date", },
+        {"name": "End Time", },
+        {"name": "Minutes",    "justify": "right",
+            "format": "float", "spec": "%0.1f"},
+        {"name": "MiB",        "justify": "right",
+            "format": "float", "spec": "%0.1f"},
+        {"name": "MiB/Sec",    "justify": "right",
+            "format": "float", "spec": "%0.1f"},
+        {"name": "Volatility", "justify": "right",
+            "format": "float", "spec": "%0.1f"},
     ]
-
 
     try:
         f.output_results(results, headers)
@@ -208,7 +215,7 @@ for activity in [ 'BACKUP', 'RESTORE', 'ARCHIVE', 'RETRIEVE', 'STGPOOL BACKUP', 
 f.output_header("actlog")
 
 results = d.execute(
-"""select
+    """select
     date(DATE_TIME),
     time(DATE_TIME),
     NODENAME,
@@ -219,17 +226,18 @@ order by DATE_TIME
 """, (start, stop))
 
 headers = [
-    { "name": "Date", },
-    { "name": "Time", },
-    { "name": "Node", },
-    { "name": "Message", },
+    {"name": "Date", },
+    {"name": "Time", },
+    {"name": "Node", },
+    {"name": "Message", },
 ]
 
 
 def decode_char(char):
     if char in string.printable:
         return char
-    return "%%%02X"%(ord(char))
+    return "%%%02X" % (ord(char))
+
 
 def decode(string):
     try:
@@ -237,14 +245,18 @@ def decode(string):
     except UnicodeDecodeError:
         return "".join(map(decode_char, string))
 
+
 def check_actlog(results):
     global errors_actlog
     for r in results:
-        errors_actlog=True
-        m = re.match("(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
+        errors_actlog = True
+        m = re.match(
+            "(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
         if m is not None:
-            r[3] =  "%s '%s...%s': %s"%(m.group(1), m.group(2), m.group(3), m.group(4))
-        f.output_text(u"%s, %s, %s, %s" % (decode(r[0]), decode(r[1]), decode(r[2]), decode(r[3])))
+            r[3] = "%s '%s...%s': %s" % (
+                m.group(1), m.group(2), m.group(3), m.group(4))
+        f.output_text(u"%s, %s, %s, %s" %
+                      (decode(r[0]), decode(r[1]), decode(r[2]), decode(r[3])))
 
 try:
     check_actlog(results)
@@ -257,13 +269,16 @@ if args.date is None:
     f.output_header("usage")
 
     results = d.execute(
-    "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
+        "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
 
     headers = [
-        { "name": "Node", },
-        { "name": "Logical (MiB)",  "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "Physical (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
-        { "name": "Overhead (MiB)", "justify": "right", "format": "float", "spec": "%0.1f" },
+        {"name": "Node", },
+        {"name": "Logical (MiB)",  "justify": "right",
+         "format": "float", "spec": "%0.1f"},
+        {"name": "Physical (MiB)", "justify": "right",
+         "format": "float", "spec": "%0.1f"},
+        {"name": "Overhead (MiB)", "justify": "right",
+         "format": "float", "spec": "%0.1f"},
     ]
     f.output_results(results, headers)
 
@@ -290,8 +305,10 @@ if args.debug:
     f.close()
 else:
     msg = email.mime.multipart.MIMEMultipart('alternative')
-    msg.attach(email.mime.text.MIMEText(f.plain_string.getvalue(), "plain", _charset="utf8"))
-    msg.attach(email.mime.text.MIMEText(f.html_string.getvalue(), "html", _charset="utf8"))
+    msg.attach(email.mime.text.MIMEText(
+        f.plain_string.getvalue(), "plain", _charset="utf8"))
+    msg.attach(email.mime.text.MIMEText(
+        f.html_string.getvalue(), "html", _charset="utf8"))
     f.close()
 
     subject = "TSM Operational Report - TSM, Daily Report"

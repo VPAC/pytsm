@@ -2,12 +2,13 @@
 import pydsm
 import argparse
 
-parser = argparse.ArgumentParser(description='List TSM storage pools used for node')
+parser = argparse.ArgumentParser(
+    description='List TSM storage pools used for node')
 parser.add_argument('--server', dest="server",
-                   help='TSM server to connect to')
+                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv", "html"], default="readable",
-                   help='format to use when displaying results')
+                    choices=["readable", "csv", "html"], default="readable",
+                    help='format to use when displaying results')
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--node', dest="node",
@@ -28,19 +29,22 @@ if args.node is not None:
     cargs = (args.node.upper(), )
 elif args.stgpool is not None:
     condition = "where stgpool_name=%s"
-    cargs =(args.stgpool, )
+    cargs = (args.stgpool, )
 else:
     condition = ""
     cargs = None
 
 results = d.execute(
-"SELECT node_name, filespace_name, stgpool_name, logical_mb AS \"Total MB\" FROM occupancy %s ORDER BY node_name, filespace_name, stgpool_name"%condition, cargs)
+    "SELECT node_name, filespace_name, stgpool_name, logical_mb "
+    "AS \"Total MB\" FROM occupancy %s "
+    "ORDER BY node_name, filespace_name, stgpool_name" % condition, cargs)
 
 headers = [
-    { "name": "Node", },
-    { "name": "Filespace", },
-    { "name": "STG Pool", },
-    { "name": "Used (MiB)", "justify": "right", "format": "float", "spec": "%0.2f" },
+    {"name": "Node", },
+    {"name": "Filespace", },
+    {"name": "STG Pool", },
+    {"name": "Used (MiB)", "justify": "right",
+     "format": "float", "spec": "%0.2f"},
 ]
 f.output_results(results, headers)
 

@@ -2,12 +2,13 @@
 import pydsm
 import argparse
 
-parser = argparse.ArgumentParser(description='List abbreviated contents of TSM volume')
+parser = argparse.ArgumentParser(
+    description='List abbreviated contents of TSM volume')
 parser.add_argument('--server', dest="server",
-                   help='TSM server to connect to')
+                    help='TSM server to connect to')
 parser.add_argument('--format', dest="format",
-                   choices=["readable", "csv", "html"], default="readable",
-                   help='format to use when displaying results')
+                    choices=["readable", "csv", "html"], default="readable",
+                    help='format to use when displaying results')
 
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--stgpool', dest="stgpool",
@@ -24,7 +25,6 @@ d = pydsm.dsmadmc()
 d.auto_open(args.server)
 
 
-
 if args.volume is not None:
     condition = "where volume_name=%s"
     cargs = (args.volume,)
@@ -37,27 +37,36 @@ else:
 
 volumes = {}
 results = d.execute(
-"select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS from volumes %s"%condition, cargs)
+    "select volume_name,STGPOOL_NAME,EST_CAPACITY_MB,PCT_UTILIZED,"
+    "EST_CAPACITY_MB*PCT_UTILIZED/100,STATUS "
+    "from volumes %s" % condition, cargs)
 result_array = []
 for row in results:
     v = row[0]
     if v in volumes:
-        raise RuntimeError("volume %s found multiple times"%v)
+        raise RuntimeError("volume %s found multiple times" % v)
     volumes[v] = row
 
 results = d.execute(
-"select volume_name, node_name, filespace_name from volumeusage %s order by volume_name, node_name, filespace_name"%condition, cargs)
+    "select volume_name, node_name, filespace_name "
+    "from volumeusage %s "
+    "order by volume_name, node_name, filespace_name"
+    % condition, cargs)
 
 headers = [
-    { "name": "Volume", },
-    { "name": "STG Pool", },
-    { "name": "Capacity (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
-    { "name": "Utilized (%)",   "justify": "right", "format": "float", "spec": "%0.1f"  },
-    { "name": "Utilized (MiB)", "justify": "right", "format": "float", "spec": "%0.1f"  },
-    { "name": "Status", },
-    { "name": "Node", },
-    { "name": "Filespace", },
+    {"name": "Volume", },
+    {"name": "STG Pool", },
+    {"name": "Capacity (MiB)", "justify": "right",
+     "format": "float", "spec": "%0.1f"},
+    {"name": "Utilized (%)",   "justify": "right",
+     "format": "float", "spec": "%0.1f"},
+    {"name": "Utilized (MiB)", "justify": "right",
+     "format": "float", "spec": "%0.1f"},
+    {"name": "Status", },
+    {"name": "Node", },
+    {"name": "Filespace", },
 ]
+
 
 def process_results(results):
     for row in results:
