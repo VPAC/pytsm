@@ -1,0 +1,25 @@
+Source: python-pytsm
+Section: contrib/python
+Priority: optional
+Maintainer: Brian May <bam@debian.org>
+Build-Depends: debhelper (>=8.1.0), dh-python,
+ python-flake8,
+ python-all (>= 2.6.6-3~), python-setuptools, python-six,
+ python3-all, python3-setuptools, python3-six,
+Standards-Version: 3.9.5
+Homepage: https://github.com/vpac/pytsm
+Vcs-Git: git://github.com/vpac/pytsm
+Vcs-Browser: https://github.com/vpac/pytsm
+X-Python-Version: >= 2.7
+
+Package: python-pytsm
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: Small Python library to manage TSM server.
+ Python TSM is a library of Python bindings to talk to a TSM server.
+
+Package: python3-pytsm
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: Small Python library to manage TSM server.
+ Python TSM is a library of Python bindings to talk to a TSM server.
