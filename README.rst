@@ -3,11 +3,13 @@ pydsm
 
 python dsm bridge
 
-##Authors
+Authors
+-------
 Brian May had the idea and wrote most of it.
 Andrew Spiers turned it into a library.
 
-##License
+License
+-------
 GPL3. Read the file LICENSE
 
 ##Installation on Debian Wheezy
