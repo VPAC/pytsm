@@ -17,6 +17,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301  USA
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 """module for creating simple ASCII tables
 
@@ -563,13 +565,6 @@ class Texttable:
         for cell, width in zip(line, self._width):
             array = []
             for c in cell.split('\n'):
-                try:
-                    c = unicode(c, 'utf')
-                except UnicodeDecodeError, strerror:
-                    sys.stderr.write(
-                        "UnicodeDecodeError exception "
-                        "for string '%s': %s\n" % (c, strerror))
-                    c = unicode(c, 'utf', 'replace')
                 array.extend(textwrap.wrap(c, width))
             line_wrapped.append(array)
         max_cell_lines = reduce(max, map(len, line_wrapped))
