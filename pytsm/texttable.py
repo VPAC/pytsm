@@ -95,7 +95,6 @@ Brian Peterson:
 """
 
 import sys
-import string
 
 try:
     if sys.version >= '2.3':
@@ -107,11 +106,6 @@ try:
 except ImportError:
     sys.stderr.write("Can't import textwrap module!\n")
     raise
-
-try:
-    True, False
-except NameError:
-    (True, False) = (1, 0)
 
 
 def len(iterable):
@@ -290,7 +284,7 @@ class Texttable:
         """
 
         self._check_row_size(array)
-        self._header = map(str, array)
+        self._header = list(map(str, array))
 
     def add_row(self, array):
         """Add a row in the rows stack
@@ -448,7 +442,7 @@ class Texttable:
         s = "%s%s%s" % (horiz, [horiz, self._char_corner][self._has_vlines()],
                         horiz)
         # build the line
-        l = string.join([horiz * n for n in self._width], s)
+        l = s.join([horiz * n for n in self._width])
         # add border if needed
         if self._has_border():
             l = "%s%s%s%s%s\n" % (self._char_corner, horiz, l, horiz,
@@ -496,7 +490,9 @@ class Texttable:
                 except (TypeError, IndexError):
                     maxi.append(self._len_cell(cell))
         items = len(maxi)
-        length = reduce(lambda x, y: x + y, maxi)
+        length = 0
+        for l in maxi:
+            length = length + l
         if self._max_width and length + items * 3 + 1 > self._max_width:
             max_width = self._max_width - items * 3 - 1
             max_col_width = max_width / items
@@ -545,8 +541,9 @@ class Texttable:
                 if align == "r":
                     out += "%s " % (fill * space + cell_line)
                 elif align == "c":
-                    out += "%s " % (fill / 2 * space + cell_line
-                                    + (fill / 2 + fill % 2) * space)
+                    out += "%s " % (int(fill / 2) * space
+                                    + cell_line
+                                    + int(fill / 2 + fill % 2) * space)
                 else:
                     out += "%s " % (cell_line + fill * space)
                 if length < len(line):
@@ -567,14 +564,16 @@ class Texttable:
             for c in cell.split('\n'):
                 array.extend(textwrap.wrap(c, width))
             line_wrapped.append(array)
-        max_cell_lines = reduce(max, map(len, line_wrapped))
+        max_cell_lines = 0
+        for l in line_wrapped:
+            max_cell_lines = max(max_cell_lines, len(l))
         for cell, valign in zip(line_wrapped, self._valign):
             if isheader:
                 valign = "t"
             if valign == "m":
                 missing = max_cell_lines - len(cell)
-                cell[:0] = [""] * (missing / 2)
-                cell.extend([""] * (missing / 2 + missing % 2))
+                cell[:0] = [""] * int(missing / 2)
+                cell.extend([""] * int(missing / 2 + missing % 2))
             elif valign == "b":
                 cell[:0] = [""] * (max_cell_lines - len(cell))
             else:
@@ -588,7 +587,7 @@ if __name__ == '__main__':
     table.add_rows([["Name", "Age", "Nickname"],
                     ["Mr\nXavier\nHuon", 32, "Xav'"],
                     ["Mr\nBaptiste\nClement", 1, "Baby"]])
-    print table.draw() + "\n"
+    print(table.draw() + "\n")
 
     table = Texttable()
     table.set_deco(Texttable.HEADER)
@@ -604,4 +603,4 @@ if __name__ == '__main__':
                         12800000000000000000000.00023],
                     ["lmn",     5e-78,   5e-78, 89.4,  .000000000000128],
                     ["opqrstu", .023,    5e+78, 92., 12800000000000000000000]])
-    print table.draw()
+    print(table.draw())

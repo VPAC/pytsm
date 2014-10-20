@@ -17,7 +17,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import ConfigParser
+from six.moves import configparser
+
 import subprocess
 import sys
 import os
@@ -37,6 +38,11 @@ blacklist_msg_numbers = {
     '2034',  # ANR2034E SELECT: No match found using this criteria.
     '8001',  # ANS8001I Return code 11
 }
+
+
+def _utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.decode('utf-8')
 
 
 class dsmadmc(object):
@@ -62,7 +68,7 @@ class dsmadmc(object):
     def auto_open(self, server):
         configfile = os.path.join(os.getenv('HOME'), '.pytsm', 'pytsm.conf')
         logfile = os.path.join(os.getenv('HOME'), '.pytsm', 'dsmerror.log')
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(configfile)
         if server is None:
             server = config.get("main", 'default_server')
@@ -88,7 +94,9 @@ class dsmadmc(object):
             "-comma",  "-dataonly=yes", command]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
-        reader = csv.reader(process.stdout, delimiter=str(","))
+        reader = csv.reader(
+            _utf_8_encoder(process.stdout), delimiter=str(","))
+
         for row in reader:
             m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
             if m is not None:
