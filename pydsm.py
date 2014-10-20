@@ -20,6 +20,11 @@ def _default_message_handler(msg_prefix, msg_number, msg_type, msg_text):
 class Failed(Exception):
     pass
 
+blacklist_msg_numbers = {
+    '2034',  # ANR2034E SELECT: No match found using this criteria.
+    '8001',  # ANS8001I Return code 11
+}
+
 
 class dsmadmc(object):
 
@@ -72,18 +77,17 @@ class dsmadmc(object):
 
         reader = csv.reader(process.stdout, delimiter=",")
         for row in reader:
-            is_msg = False
             m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
             if m is not None:
-                is_msg = True
-                self._message(
-                    m.group(1), m.group(2), m.group(3),
-                    m.group(4) + ",".join(row[1:]))
-            if not is_msg:
+                if m.group(2) not in blacklist_msg_numbers:
+                    self._message(
+                        m.group(1), m.group(2), m.group(3),
+                        m.group(4) + ",".join(row[1:]))
+            else:
                 yield row
 
         retcode = process.wait()
-        if retcode:
+        if retcode and retcode != 11:
             cmd[3] = "-password=XXXXXXXXXX"  # don't put the password on stderr
             cmd_str = " ".join(cmd)
             raise Failed(
