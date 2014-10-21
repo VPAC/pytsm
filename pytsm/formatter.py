@@ -85,7 +85,7 @@ class formatter(object):
 class formatter_csv(formatter):
 
     def output_results(self, results, headers):
-        writer = csv.writer(self.output, delimiter=',')
+        writer = csv.writer(self.output, delimiter=str(','))
         writer.writerow([h['name'] for h in headers])
         for row in results:
             writer.writerow(row)
