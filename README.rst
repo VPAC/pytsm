@@ -30,3 +30,7 @@ Prerequisites:
     [$DEFAULT_SERVER]
     user: $USER
     password: $PASSWORD
+
+Status
+------
+The API is not final and subject to change and break without notice.
