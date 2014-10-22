@@ -122,9 +122,8 @@ class Command(BaseCommand):
             f.output_text(
                 "%s%s%s %s" % (msg_prefix, msg_number, msg_type, msg_text))
 
-        d = pytsm.dsmadmc()
+        d = self.get_dsmadmc(args.server)
         d.set_message_handler(message_handler)
-        d.auto_open(args.server)
 
         f.output_head("TSM summary from %s to %s" % (start, stop))
 

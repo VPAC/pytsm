@@ -17,12 +17,9 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from six.moves import configparser
-
 import subprocess
 import sys
 import string
-import os
 import re
 import csv
 
@@ -116,17 +113,6 @@ class dsmadmc(object):
 
     def _message(self, msg_prefix, msg_number, msg_type, msg_text):
         self.message_handler(msg_prefix, msg_number, msg_type, msg_text)
-
-    def auto_open(self, server):
-        configfile = os.path.join(os.getenv('HOME'), '.pytsm', 'pytsm.conf')
-        logfile = os.path.join(os.getenv('HOME'), '.pytsm', 'dsmerror.log')
-        config = configparser.RawConfigParser()
-        config.read(configfile)
-        if server is None:
-            server = config.get("main", 'default_server')
-        user = config.get(server, 'user')
-        password = config.get(server, 'password')
-        self.open(server, user, password, logfile)
 
     def execute(self, command, args=None):
         server = self.server

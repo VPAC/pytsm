@@ -17,12 +17,17 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import os
 import pytsm
 import argparse
+from six.moves import configparser
 
 
 class BaseCommand(object):
     help = 'Please shoot the messenger.'
+
+    def __init__(self):
+        self.config = None
 
     def execute(self, prog, command, args):
         parser = argparse.ArgumentParser(
@@ -39,6 +44,28 @@ class BaseCommand(object):
     def handle(self, args):
         raise NotImplementedError()
 
+    def get_config(self):
+        if self.config is None:
+            configfile = os.path.join(
+                os.getenv('HOME'), '.pytsm', 'pytsm.conf')
+            config = configparser.RawConfigParser()
+            config.read(configfile)
+            self.config = config
+        return self.config
+
+    def get_dsmadmc(self, server):
+        config = self.get_config()
+
+        logfile = os.path.join(os.getenv('HOME'), '.pytsm', 'dsmerror.log')
+        if server is None:
+            server = config.get("main", 'default_server')
+        user = config.get(server, 'user')
+        password = config.get(server, 'password')
+
+        d = pytsm.dsmadmc()
+        d.open(server, user, password, logfile)
+        return d
+
 
 class TsmCommand(BaseCommand):
 
@@ -53,8 +80,6 @@ class TsmCommand(BaseCommand):
 
     def handle(self, args):
         f = pytsm.get_formatter(args.format)
-
-        d = pytsm.dsmadmc()
-        d.auto_open(args.server)
+        d = self.get_dsmadmc(args.server)
 
         self.handle_tsm(args, f, d)
