@@ -3,9 +3,23 @@
 
 export PYBUILD_NAME=pytsm
 
+PREFIX = debian/python-pytsm
+PREFIX3 = debian/python3-pytsm
+PREFIXC = debian/python-pytsm-common
+
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild
 
 .PHONY: override_dh_auto_test
 override_dh_auto_test:
 	./run_tests.sh
+
+.PHONY: override_dh_auto_install
+override_dh_auto_install:
+	dh_auto_install
+
+	# Drop pytsm which is in python-django-common and
+	# clean up empty parent directories
+	rm $(PREFIX)/usr/bin/pytsm
+	rm $(PREFIX3)/usr/bin/pytsm
+	rmdir --ignore-fail-on-non-empty --parents $(PREFIX)/usr/bin $(PREFIX3)/usr/bin

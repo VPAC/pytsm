@@ -43,7 +43,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     keywords="tsm",
-    install_requires=['six'],
+    install_requires=['six', 'setuptools'],
     entry_points={
         'console_scripts': ['pytsm = pytsm.actions:command_line', ]
     }

@@ -1,3 +1,9 @@
+python-pytsm (0.0.1-1) unstable; urgency=low
+
+  * Numerous issues fixed.
+
+ -- Brian May <bam@debian.org>  Wed, 22 Oct 2014 11:39:20 +1100
+
 python-pytsm (0.0.0-1) unstable; urgency=low
 
   * Initial release.

@@ -1,0 +1,25 @@
+#!/bin/sh
+shell_code=''' '
+# shell code
+if command -v python3 > /dev/null && test -e /usr/lib/python3/dist-packages/pytsm
+then
+    exec python3 "$0" "$@"
+elif command -v python2.7 > /dev/null && test -e /usr/lib/python2.7/dist-packages/pytsm
+then
+    exec python2.7 "$0" "$@"
+else
+    echo "Cannot find installed version of python-pytsm or python3-pytsm" >&2
+    exit 1
+fi
+
+python_code='''
+# python code
+# ONLY use DOUBLE quotes <"> after this line
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == "__main__":
+    sys.exit(
+        load_entry_point("pytsm", "console_scripts", "pytsm")()
+    )
+# End of Python code. Do not modify this line. #'
