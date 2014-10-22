@@ -21,6 +21,7 @@ from six.moves import configparser
 
 import subprocess
 import sys
+import string
 import os
 import re
 import csv
@@ -40,9 +41,59 @@ blacklist_msg_numbers = {
 }
 
 
-def _utf_8_encoder(unicode_csv_data):
-    for line in unicode_csv_data:
-        yield line.decode('utf-8')
+def _decode_n_char(n, char):
+    if char in string.whitespace:
+        if char == " " or char == "\n":
+            return char
+    elif char in string.printable:
+        return char
+    return "%%%02X" % n
+
+
+def _decode(line):
+    # decode line as utf-8, but if error then strip out all non-ASCII
+    # characters
+    try:
+        return line.decode("utf-8")
+    except UnicodeDecodeError:
+        return "".join(map(_decode_char, line))
+
+
+if sys.version_info < (3, 0):
+    # Python2: csv module does not support unicode, we must use byte strings.
+
+    def _decode_char(char):
+        # char is string
+        return _decode_n_char(ord(char), char)
+
+    def _input_csv(csv_data):
+        for line in csv_data:
+            assert isinstance(line, bytes)
+            yield line
+
+    def _output_csv(csv_line):
+        for i, column in enumerate(csv_line):
+            csv_line[i] = _decode(column)
+            assert isinstance(csv_line[i], unicode)
+
+else:
+    # Python3: csv module does support unicode, we must use strings everywhere,
+    # not byte strings
+
+    def _decode_char(char):
+        # char is integer
+        return _decode_n_char(char, chr(char))
+
+    def _input_csv(unicode_csv_data):
+        for line in unicode_csv_data:
+            assert isinstance(line, bytes)
+            line = _decode(line)
+            assert isinstance(line, str)
+            yield line
+
+    def _output_csv(csv_line):
+        for column in csv_line:
+            assert isinstance(column, str)
 
 
 class dsmadmc(object):
@@ -95,9 +146,10 @@ class dsmadmc(object):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         reader = csv.reader(
-            _utf_8_encoder(process.stdout), delimiter=str(","))
+            _input_csv(process.stdout), delimiter=str(","))
 
         for row in reader:
+            _output_csv(row)
             m = re.match("([A-Z][A-Z][A-Z])(\d\d\d\d)([IESWK]) (.*)$", row[0])
             if m is not None:
                 if m.group(2) not in blacklist_msg_numbers:
