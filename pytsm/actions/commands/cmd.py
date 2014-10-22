@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2012-2014 VPAC
 #
 # This file is part of pytsm.
@@ -15,23 +14,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
-import sys
-import pytsm
+from ..base import TsmCommand
 
-if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        raise RuntimeError("Not enough parameters")
 
-    d = pytsm.dsmadmc()
-    d.auto_open(sys.argv[1])
+class Command(TsmCommand):
+    help = "Run TSM command"
 
-    f = pytsm.get_formatter(output_format="readable")
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
 
-    results = d.execute(" ".join(sys.argv[2::]))
-    f.output_head(" ".join(sys.argv[2::]))
-    f.output_results(results, [])
-    d.close()
-    f.output_tail()
+        parser.add_argument('cmd', nargs='+',
+                            help='Name of node')
+
+    def handle_tsm(self, args, f, d):
+        results = d.execute(" ".join(args.cmd))
+        f.output_head(" ".join(args.cmd))
+        f.output_results(results, [])
+        d.close()
+        f.output_tail()

@@ -14,5 +14,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
-from .core import dsmadmc, Failed  # NOQA
-from .formatter import get_formatter  # NOQA
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+
+import os
+import pkgutil
+
+from .. import load_command
+from ..base import BaseCommand
+
+from .. import commands as namespace
+
+
+class Command(BaseCommand):
+    help = "List all supported commands."
+
+    def handle(self, args):
+        path = os.path.dirname(namespace.__file__)
+        for _, name, _ in pkgutil.iter_modules([path]):
+            klass = load_command(name)
+            print("%16s  %s" % (name, klass.help))

@@ -44,4 +44,7 @@ setup(
     ],
     keywords="tsm",
     install_requires=['six'],
+    entry_points={
+        'console_scripts': ['pytsm = pytsm.actions:command_line', ]
+    }
 )

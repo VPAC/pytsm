@@ -14,5 +14,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
-from .core import dsmadmc, Failed  # NOQA
-from .formatter import get_formatter  # NOQA
+import sys
+import codecs
+import locale
+from . import command_line
+
+if __name__ == "__main__":
+    if sys.version_info < (3, 0):
+        # for python2 we need to use correct encoding when writing to stdout
+        encoding = locale.getpreferredencoding()
+        Writer = codecs.getwriter(encoding)
+        sys.stdout = Writer(sys.stdout)
+
+    rc = command_line(sys.argv)
+    sys.exit(rc)

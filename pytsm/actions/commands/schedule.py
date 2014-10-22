@@ -14,5 +14,29 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with pytsm.  If not, see <http://www.gnu.org/licenses/>.
-from .core import dsmadmc, Failed  # NOQA
-from .formatter import get_formatter  # NOQA
+
+from ..base import TsmCommand
+
+
+class Command(TsmCommand):
+    help = "Display TSM schedule"
+
+    def handle_tsm(self, args, f, d):
+        f.output_head("Schedule")
+
+        results = d.execute(
+            "SELECT dayofweek, starttime, schedule_name "
+            "FROM client_schedules "
+            "ORDER BY dayofweek, starttime")
+
+        headers = [
+            {"name": "Day", },
+            {"name": "Start Time", },
+            {"name": "Node", },
+        ]
+
+        f.output_results(results, headers)
+
+        d.close()
+
+        f.output_tail()
