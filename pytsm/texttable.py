@@ -495,7 +495,7 @@ class Texttable:
             length = length + l
         if self._max_width and length + items * 3 + 1 > self._max_width:
             max_width = self._max_width - items * 3 - 1
-            max_col_width = max_width / items
+            max_col_width = int(max_width / items)
             desired_maxi = list(maxi)
             width = 0
             for i, v in enumerate(maxi):
