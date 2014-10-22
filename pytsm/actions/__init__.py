@@ -20,6 +20,8 @@ from __future__ import print_function
 
 import importlib
 import sys
+import codecs
+import locale
 
 
 def load_command(name):
@@ -30,6 +32,11 @@ def load_command(name):
 
 
 def command_line(argv=None):
+    if sys.version_info < (3, 0):
+        # for python2 we need to use correct encoding when writing to stdout
+        encoding = locale.getpreferredencoding()
+        Writer = codecs.getwriter(encoding)
+        sys.stdout = Writer(sys.stdout)
 
     if argv is None:
         argv = sys.argv
