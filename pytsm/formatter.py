@@ -47,6 +47,17 @@ class formatter(object):
         self.output.write(line)
         self.output.write("\n")
 
+
+class formatter_csv(formatter):
+
+    def output_results(self, results, headers):
+        writer = csv.writer(self.output, delimiter=str(','))
+        writer.writerow([h['name'] for h in headers])
+        for row in results:
+            writer.writerow(row)
+
+
+class formatter_fancy(formatter):
     def format_results(self, results, headers):
 
         # copy data
@@ -82,16 +93,7 @@ class formatter(object):
         return results, headers
 
 
-class formatter_csv(formatter):
-
-    def output_results(self, results, headers):
-        writer = csv.writer(self.output, delimiter=str(','))
-        writer.writerow([h['name'] for h in headers])
-        for row in results:
-            writer.writerow(row)
-
-
-class formatter_html(formatter):
+class formatter_html(formatter_fancy):
 
     def output_results(self, results, headers):
         results, headers = self.format_results(results, headers)
@@ -155,7 +157,7 @@ class formatter_html(formatter):
         self.output.write("</p>\n")
 
 
-class formatter_readable(formatter):
+class formatter_readable(formatter_fancy):
 
     def output_results(self, results, headers):
         locale.setlocale(locale.LC_ALL, '')
