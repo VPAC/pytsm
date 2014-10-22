@@ -4,13 +4,6 @@ DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 RETURN=0
 cd $DIR
 
-if [ -n "$*" ]; then
-    TESTS="$@"
-else
-    TESTS="tldap"
-fi
-
-# NOTE (RS) Disabled because there are far too many errors to fix.
 echo ""
 echo "FLAKE8"
 echo "############################"
