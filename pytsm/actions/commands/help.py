@@ -34,4 +34,4 @@ class Command(BaseCommand):
         path = os.path.dirname(namespace.__file__)
         for _, name, _ in pkgutil.iter_modules([path]):
             klass = load_command(name)
-            print("%16s  %s" % (name, klass.help))
+            print("%24s  %s" % (name, klass.help))
