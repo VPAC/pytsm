@@ -36,6 +36,7 @@ class Failed(Exception):
     pass
 
 blacklist_msg_numbers = {
+    '0944',  # ANR0944E QUERY PROCESS: No active processes found.
     '2034',  # ANR2034E SELECT: No match found using this criteria.
     '8001',  # ANS8001I Return code 11
 }
