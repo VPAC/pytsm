@@ -34,7 +34,8 @@ TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time))/60.0 as "Min",
 bytes_processed/1024/1024 as "Total_MiB",
 case
     when TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time)) >0
-    then bytes_processed/TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time))/1024.0/1024.0
+    then bytes_processed/TIMESTAMPDIFF(2,CHAR(current_timestamp-start_time))
+        /1024.0/1024.0
     else cast(0 as decimal(6,1))
     end as "MiB/Sec"
 from processes

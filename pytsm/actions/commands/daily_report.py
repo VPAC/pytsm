@@ -190,28 +190,28 @@ class Command(BaseCommand):
 
             results = d.execute(
                 """select
-                entity as "Node",
-                activity as "Activity",
-                date(start_time) as "Start Date",
-                time(start_time) as "Start Time",
-                date(end_time) as "End Date",
-                time(end_time) as "End Time",
-                TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as "Min",
-                bytes/1024/1024 as "Total_MiB",
-                case
-                    when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
-                    then bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024.0/1024.0
-                    else 0
-                    end as "MiB/Sec",
-                case
-                    when examined >0
-                    then affected/examined*100
-                    else 0
-                    end as "Volatility_%%"
-            from summary
-            where START_TIME >= %s and START_TIME < %s and activity=%s
-            order by START_TIME
-            """, (start, stop, activity))
+    entity as "Node",
+    activity as "Activity",
+    date(start_time) as "Start Date",
+    time(start_time) as "Start Time",
+    date(end_time) as "End Date",
+    time(end_time) as "End Time",
+    TIMESTAMPDIFF(2,CHAR(end_time-start_time))/60.0 as "Min",
+    bytes/1024/1024 as "Total_MiB",
+    case
+        when TIMESTAMPDIFF(2,CHAR(end_time-start_time)) >0
+        then bytes/TIMESTAMPDIFF(2,CHAR(end_time-start_time))/1024.0/1024.0
+        else 0
+        end as "MiB/Sec",
+    case
+        when examined >0
+        then affected/examined*100
+        else 0
+        end as "Volatility_%%"
+from summary
+where START_TIME >= %s and START_TIME < %s and activity=%s
+order by START_TIME
+""", (start, stop, activity))
 
             headers = [
                 {"name": "Node", },
@@ -241,14 +241,16 @@ class Command(BaseCommand):
 
         results = d.execute(
             """select
-            date(DATE_TIME),
-            time(DATE_TIME),
-            NODENAME,
-            MESSAGE
-        from actlog
-        where DATE_TIME >= %s and DATE_TIME < %s and ( SEVERITY='E' or SEVERITY='S' ) and (MSGNO!=2034 and MSGNO!=1701 and MSGNO!=944)
-        order by DATE_TIME
-        """, (start, stop))
+    date(DATE_TIME),
+    time(DATE_TIME),
+    NODENAME,
+    MESSAGE
+from actlog
+where DATE_TIME >= %s and DATE_TIME < %s
+    and ( SEVERITY='E' or SEVERITY='S' )
+    and (MSGNO!=2034 and MSGNO!=1701 and MSGNO!=944)
+order by DATE_TIME
+""", (start, stop))
 
         headers = [
             {"name": "Date", },
@@ -261,7 +263,9 @@ class Command(BaseCommand):
             for r in results:
                 errors.actlog = True
                 m = re.match(
-                    "(ANE4018E Error processing) '(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': (file name too long \(SESSION: [0-9]+\))", r[3])
+                    "(ANE4018E Error processing) "
+                    "'(/nfs/user[12]/[a-z0-9]+/[^/]+/).*(/[^/]+/[^/]*)': "
+                    "(file name too long \(SESSION: [0-9]+\))", r[3])
                 if m is not None:
                     r[3] = "%s '%s...%s': %s" % (
                         m.group(1), m.group(2), m.group(3), m.group(4))
@@ -277,7 +281,10 @@ class Command(BaseCommand):
             f.output_header("usage")
 
             results = d.execute(
-                "SELECT node_name, sum(logical_mb), sum(physical_mb), sum(physical_mb)-sum(logical_mb) FROM occupancy GROUP BY node_name")
+                "SELECT node_name, sum(logical_mb), sum(physical_mb), "
+                "sum(physical_mb)-sum(logical_mb) "
+                "FROM occupancy "
+                "GROUP BY node_name")
 
             headers = [
                 {"name": "Node", },
