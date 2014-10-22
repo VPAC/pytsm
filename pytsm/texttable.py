@@ -328,8 +328,8 @@ class Texttable:
         - the table is returned as a whole string
         """
 
-        if not self._header and not self._rows:
-            return
+        if not self._rows:
+            return "No data available."
         self._compute_cols_width()
         self._check_align()
         out = ""
