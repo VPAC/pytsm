@@ -33,7 +33,7 @@ setup(
     license="GPL3+",
     long_description=open('README.rst').read(),
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU Lesser General Public License v3 "
         "or later (LGPLv3+)",
