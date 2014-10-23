@@ -5,8 +5,8 @@ Contains python TSM bindings.
 
 Authors
 -------
-Brian May
-Andrew Spiers
+* Brian May
+* Andrew Spiers
 
 License
 -------
