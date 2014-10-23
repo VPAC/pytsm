@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: pytsm
 Upstream-Contact: Brian May <bam@debian.org>
-Source: https://github.com/vpac/pytsm
+Source: https://github.com/VPAC/pytsm
 
 Files: *
 Copyright: 2012-2014, VPAC

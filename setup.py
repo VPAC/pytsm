@@ -25,7 +25,7 @@ with open('VERSION.txt', 'r') as f:
 setup(
     name="pytsm",
     version=version,
-    url='https://github.com/vpac/pytsm/',
+    url='https://github.com/VPAC/pytsm/',
     author='Brian May',
     author_email='brian@v3.org.au',
     description='Small python library to monitor TSM',
