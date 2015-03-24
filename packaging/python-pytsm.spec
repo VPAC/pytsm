@@ -8,7 +8,7 @@
 %global srcname python-pytsm
 
 Name: python-pytsm
-Version: 0.0.2
+Version: %(cat VERSION.txt)
 Release: 1%{?dist}
 Summary: Small Python 2 library to monitor TSM
 Requires: python-pytsm-common, python(abi) = 2.7
@@ -17,7 +17,6 @@ Group: Development/Libraries
 License: GPL3+
 Url: https://github.com/VPAC/pytsm/
 
-Source0: %{name}_%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires:  python2-devel, python-setuptools, python-six
