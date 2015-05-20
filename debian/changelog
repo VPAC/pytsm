@@ -1,6 +1,6 @@
-python-pytsm (0.0.2-1) UNRELEASED; urgency=low
+python-pytsm (0.0.2-1) unstable; urgency=low
 
-  * Meow.
+  * Documentation changes.
 
  -- Brian May <bam@debian.org>  Fri, 24 Oct 2014 10:15:43 +1100
 
