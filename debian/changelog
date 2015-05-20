@@ -1,3 +1,9 @@
+python-pytsm (0.0.3-1) unstable; urgency=medium
+
+  * New version.
+
+ -- Brian May <bam@debian.org>  Wed, 20 May 2015 14:41:27 +1000
+
 python-pytsm (0.0.2-1) unstable; urgency=low
 
   * Documentation changes.
